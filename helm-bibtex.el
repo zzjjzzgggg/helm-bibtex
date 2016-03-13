@@ -5,6 +5,7 @@
 ;; Author: Titus von der Malsburg <malsburg@posteo.de>
 ;; Maintainer: Titus von der Malsburg <malsburg@posteo.de>
 ;; Version: 1.0.0
+;; Package-Version: 20160310.1300
 ;; Package-Requires: ((helm "1.5.5") (parsebib "1.0") (s "1.9.0") (dash "2.6.0") (f "0.16.2") (cl-lib "0.5"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -451,17 +452,18 @@ file is specified, or if the specified file does not exist, or if
          for path = (or (nth 1 record) "")
          ; f-full prepends missing slashes, so we don't need a special
          ; case for Mendeley which omits the beginning slash.
-         if (f-file? (f-full path))
-           collect (f-full path)
+         if (f-file? (f-full path)) collect (f-full path)
          else if (f-file? (f-full (f-join path file-name)))
-           collect (f-full (f-join path file-name))))))))
+         collect (f-full (f-join path file-name))
+         else if (f-file? (f-full (f-join helm-bibtex-library-path path)))
+         collect (f-full (f-join helm-bibtex-library-path path))
+         ))))))
 
 (defun helm-bibtex-find-pdf-in-library (key-or-entry)
   "Searches the directories in `helm-bibtex-library-path' for a
 PDF whose names is composed of the BibTeX key plus \".pdf\".  The
 path of the first matching PDF is returned."
-  (let* ((key (if (stringp key-or-entry)
-                  key-or-entry
+  (let* ((key (if (stringp key-or-entry) key-or-entry
                 (helm-bibtex-get-value "=key=" key-or-entry)))
          (path (-first 'f-file?
                        (--map (f-join it (s-concat key ".pdf"))
@@ -1015,7 +1017,6 @@ entry for each BibTeX file that will open that file for editing."
 ;;;###autoload
 (defun helm-bibtex (&optional arg)
   "Search BibTeX entries.
-
 With a prefix ARG the cache is invalidated and the bibliography
 reread."
   (interactive "P")
