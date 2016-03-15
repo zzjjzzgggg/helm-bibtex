@@ -5,7 +5,8 @@
 ;; Author: Titus von der Malsburg <malsburg@posteo.de>
 ;; Maintainer: Titus von der Malsburg <malsburg@posteo.de>
 ;; Version: 1.0.0
-;; Package-Version: 20160310.1300
+;; Package-Version: 20160314.1613
+;; Package-X-Original-Version: 20160310.1300
 ;; Package-Requires: ((helm "1.5.5") (parsebib "1.0") (s "1.9.0") (dash "2.6.0") (f "0.16.2") (cl-lib "0.5"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -553,9 +554,9 @@ find a PDF file."
                       fields)
    for fields = (-update-at 0 'helm-bibtex-shorten-authors fields)
    collect
-   (cons (s-format "$0 $1 $2 $3$4 $5" 'elt
+   (cons (s-format "$0  $1 $2 $3$4 $5" 'elt
                    (-zip-with (lambda (f w) (truncate-string-to-width f w 0 ?\s))
-                              fields (list 36 (- width 53) 4 1 1 7)))
+                              fields (list 15 (- width 39) 4 1 1 13)))
          entry-key)))
 
 
