@@ -5,7 +5,8 @@
 ;; Author: Titus von der Malsburg <malsburg@posteo.de>
 ;; Maintainer: Titus von der Malsburg <malsburg@posteo.de>
 ;; Version: 1.0.0
-;; Package-Version: 20160314.1613
+;; Package-Version: 20160315.1044
+;; Package-X-Original-Version: 20160314.1613
 ;; Package-X-Original-Version: 20160310.1300
 ;; Package-Requires: ((helm "1.5.5") (parsebib "1.0") (s "1.9.0") (dash "2.6.0") (f "0.16.2") (cl-lib "0.5"))
 
@@ -338,6 +339,7 @@ actually exist."
                   (user-error "BibTeX file %s could not be found." file)))
         (-flatten (list helm-bibtex-bibliography))))
 
+
 (defun helm-bibtex-candidates ()
   "Reads the BibTeX files and returns a list of conses, one for
 each entry.  The first element of these conses is a string
@@ -356,13 +358,21 @@ is the entry (only the fields listed above) as an alist."
         (let* ((entries (helm-bibtex-parse-bibliography))
                (entries (helm-bibtex-resolve-crossrefs entries))
                (entries (helm-bibtex-prepare-entries entries))
-               (entries (nreverse entries)))
+               (entries (sort entries 'helm-bibtex-cmp-by-year))
+               ;;(entries (nreverse entries)))
+              )
           (setq helm-bibtex-cached-candidates
                 (--map (cons (helm-bibtex-clean-string
                               (s-join " " (-map #'cdr it))) it)
                        entries)))
-        (setq helm-bibtex-bibliography-hash bibliography-hash))
-      helm-bibtex-cached-candidates)))
+        (setq helm-bibtex-bibliography-hash bibliography-hash)
+	  )
+      helm-bibtex-cached-candidates)
+  )
+)
+
+(defun helm-bibtex-cmp-by-year (e1 e2)
+  (if (not (string< (helm-bibtex-get-value "year" e1) (helm-bibtex-get-value "year" e2))) t nil))
 
 (defun helm-bibtex-resolve-crossrefs (entries)
   "Expand all entries with fields from cross-references entries."
