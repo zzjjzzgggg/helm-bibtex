@@ -5,7 +5,8 @@
 ;; Author: Titus von der Malsburg <malsburg@posteo.de>
 ;; Maintainer: Titus von der Malsburg <malsburg@posteo.de>
 ;; Version: 1.0.0
-;; Package-Version: 20160315.1044
+;; Package-Version: 20160319.1948
+;; Package-X-Original-Version: 20160315.1044
 ;; Package-X-Original-Version: 20160314.1613
 ;; Package-X-Original-Version: 20160310.1300
 ;; Package-Requires: ((helm "1.5.5") (parsebib "1.0") (s "1.9.0") (dash "2.6.0") (f "0.16.2") (cl-lib "0.5"))
@@ -199,7 +200,6 @@ should be a single character."
     ("Library of Congress" . "https://www.loc.gov/search/?q=%s&all=true&st=list")
     ("Deutsche Nationalbibliothek" . "https://portal.dnb.de/opac.htm?query=%s")
     ("British National Library" . "http://explore.bl.uk/primo_library/libweb/action/search.do?&vl(freeText0)=%s&fn=search")
-    ("Bibliothèque nationale de France" . "http://catalogue.bnf.fr/servlet/RechercheEquation?host=catalogue?historique1=Recherche+par+mots+de+la+notice&niveau1=1&url1=/jsp/recherchemots_simple.jsp?host=catalogue&maxNiveau=1&categorieRecherche=RechercheMotsSimple&NomPageJSP=/jsp/recherchemots_simple.jsp?host=catalogue&RechercheMotsSimpleAsauvegarder=0&ecranRechercheMot=/jsp/recherchemots_simple.jsp&resultatsParPage=20&x=40&y=22&nbElementsHDJ=6&nbElementsRDJ=7&nbElementsRCL=12&FondsNumerise=M&CollectionHautdejardin=TVXZROM&HDJ_DAV=R&HDJ_D2=V&HDJ_D1=T&HDJ_D3=X&HDJ_D4=Z&HDJ_SRB=O&CollectionRezdejardin=UWY1SPQM&RDJ_DAV=S&RDJ_D2=W&RDJ_D1=U&RDJ_D3=Y&RDJ_D4=1&RDJ_SRB=P&RDJ_RLR=Q&RICHELIEU_AUTRE=ABCDEEGIKLJ&RCL_D1=A&RCL_D2=K&RCL_D3=D&RCL_D4=E&RCL_D5=E&RCL_D6=C&RCL_D7=B&RCL_D8=J&RCL_D9=G&RCL_D10=I&RCL_D11=L&ARSENAL=H&LivrePeriodique=IP&partitions=C&images_fixes=F&son=S&images_animees=N&Disquette_cederoms=E&multimedia=M&cartes_plans=D&manuscrits=BT&monnaies_medailles_objets=JO&salle_spectacle=V&Monographie_TN=M&Periodique_TN=S&Recueil_TN=R&CollectionEditorial_TN=C&Ensemble_TN=E&Spectacle_TN=A&NoticeB=%s")
     ("Gallica Bibliothèque Numérique" . "http://gallica.bnf.fr/Search?q=%s"))
   "Alist of online sources that can be used to search for
 publications.  The key of each entry is the name of the online
@@ -404,8 +404,7 @@ appeared in the BibTeX files."
    for entry-type = (parsebib-find-next-item)
    while entry-type
    unless (member-ignore-case entry-type '("preamble" "string" "comment"))
-   collect (-map (lambda (it)
-                   (cons (downcase (car it)) (cdr it)))
+   collect (-map (lambda (it) (cons (downcase (car it)) (cdr it)))
                  (parsebib-read-entry entry-type))))
 
 (defun helm-bibtex-get-entry (entry-key)
@@ -500,12 +499,19 @@ fields. If FIELDS is empty, all fields are kept. Also add a
 DO-NOT-FIND-PDF is non-nil, this function does not attempt to
 find a PDF file."
   (when entry ; entry may be nil, in which case just return nil
-    (let* ((fields (when fields (append fields (list "=type=" "=key=" "=has-pdf=" "=has-note="))))
+    (let* ((fields (when fields (append fields (list "=venue=" "=type=" "=key=" "=has-pdf=" "=has-note="))))
            ; Check for PDF:
            (entry (if (and (not do-not-find-pdf) (helm-bibtex-find-pdf entry))
                       (cons (cons "=has-pdf=" helm-bibtex-pdf-symbol) entry)
                     entry))
+           ;; entry key
            (entry-key (cdr (assoc "=key=" entry)))
+           ;; venue
+           (entry (let* ((booktitle (helm-bibtex-get-value "booktitle" entry ""))
+                         (journal (helm-bibtex-get-value "journal" entry "")))
+                    (if (not (and (string= "" booktitle) (string= "" journal)))
+                        (cons (cons "=venue=" (concat booktitle journal)) entry)
+                      entry)))
            ; Check for notes:
            (entry (if (or
                        ;; One note file per entry:
@@ -555,9 +561,9 @@ find a PDF file."
    for entry = (cdr entry)
    for entry-key = (helm-bibtex-get-value "=key=" entry)
    if (assoc-string "author" entry 'case-fold)
-     for fields = '("author" "title" "year" "=has-pdf=" "=has-note=" "=type=")
+     for fields = '("author" "title" "year" "=has-pdf=" "=has-note=" "=venue=")
    else
-     for fields = '("editor" "title" "year" "=has-pdf=" "=has-note=" "=type=")
+     for fields = '("editor" "title" "year" "=has-pdf=" "=has-note=" "=venue=")
    for fields = (-map (lambda (it)
                         (helm-bibtex-clean-string
                           (helm-bibtex-get-value it entry " ")))
@@ -566,7 +572,7 @@ find a PDF file."
    collect
    (cons (s-format "$0  $1 $2 $3$4 $5" 'elt
                    (-zip-with (lambda (f w) (truncate-string-to-width f w 0 ?\s))
-                              fields (list 15 (- width 39) 4 1 1 13)))
+                              fields (list 12 (- width 39) 4 1 1 16)))
          entry-key)))
 
 
