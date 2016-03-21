@@ -5,8 +5,6 @@
 ;; Author: Titus von der Malsburg <malsburg@posteo.de>
 ;; Maintainer: Titus von der Malsburg <malsburg@posteo.de>
 ;; Version: 1.0.0
-;; Package-Version: 20160319.1948
-;; Package-X-Original-Version: 20160315.1044
 ;; Package-X-Original-Version: 20160314.1613
 ;; Package-X-Original-Version: 20160310.1300
 ;; Package-Requires: ((helm "1.5.5") (parsebib "1.0") (s "1.9.0") (dash "2.6.0") (f "0.16.2") (cl-lib "0.5"))
