@@ -5,6 +5,7 @@
 ;; Author: Titus von der Malsburg <malsburg@posteo.de>
 ;; Maintainer: Titus von der Malsburg <malsburg@posteo.de>
 ;; Version: 1.0.0
+;; Package-Version: 20160321.1728
 ;; Package-X-Original-Version: 20160314.1613
 ;; Package-X-Original-Version: 20160310.1300
 ;; Package-Requires: ((helm "1.5.5") (parsebib "1.0") (s "1.9.0") (dash "2.6.0") (f "0.16.2") (cl-lib "0.5"))
@@ -155,7 +156,7 @@ suffix that is specified in `helm-bibtex-notes-extension'."
   :type '(choice file directory))
 
 (defcustom helm-bibtex-notes-template-multiple-files
-  "#+TITLE: Notes on: ${author} (${year}): ${title}\n\n"
+  "#+TITLE: Notes on: ${title} (${year})\n\n"
   "Template used to create a new note when each note is stored in
 a separate file.  '${field-name}' can be used to insert the value
 of a BibTeX field into the template."
@@ -184,7 +185,8 @@ used when `helm-bibtex-notes-path' is a directory (not a file)."
   :group 'helm-bibtex
   :type 'string)
 
-(defcustom helm-bibtex-notes-symbol "✎"
+;(defcustom helm-bibtex-notes-symbol "✎"
+(defcustom helm-bibtex-notes-symbol "n"
   "Symbol used to indicate that a publication has notes.  This
 should be a single character."
   :group 'helm-bibtex
