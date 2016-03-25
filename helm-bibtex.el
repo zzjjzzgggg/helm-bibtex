@@ -5,7 +5,8 @@
 ;; Author: Titus von der Malsburg <malsburg@posteo.de>
 ;; Maintainer: Titus von der Malsburg <malsburg@posteo.de>
 ;; Version: 1.0.0
-;; Package-Version: 20160321.1728
+;; Package-Version: 20160323.2235
+;; Package-X-Original-Version: 20160321.1728
 ;; Package-X-Original-Version: 20160314.1613
 ;; Package-X-Original-Version: 20160310.1300
 ;; Package-Requires: ((helm "1.5.5") (parsebib "1.0") (s "1.9.0") (dash "2.6.0") (f "0.16.2") (cl-lib "0.5"))
@@ -186,7 +187,7 @@ used when `helm-bibtex-notes-path' is a directory (not a file)."
   :type 'string)
 
 ;(defcustom helm-bibtex-notes-symbol "✎"
-(defcustom helm-bibtex-notes-symbol "n"
+(defcustom helm-bibtex-notes-symbol "+"
   "Symbol used to indicate that a publication has notes.  This
 should be a single character."
   :group 'helm-bibtex
@@ -499,7 +500,10 @@ fields. If FIELDS is empty, all fields are kept. Also add a
 DO-NOT-FIND-PDF is non-nil, this function does not attempt to
 find a PDF file."
   (when entry ; entry may be nil, in which case just return nil
-    (let* ((fields (when fields (append fields (list "=venue=" "=type=" "=key=" "=has-pdf=" "=has-note="))))
+    (let* ((fields
+            (when fields
+              (append fields
+                      (list "=venue=" "=comment=" "=type=" "=key=" "=has-pdf=" "=has-note="))))
            ; Check for PDF:
            (entry (if (and (not do-not-find-pdf) (helm-bibtex-find-pdf entry))
                       (cons (cons "=has-pdf=" helm-bibtex-pdf-symbol) entry)
@@ -509,8 +513,15 @@ find a PDF file."
            ;; venue
            (entry (let* ((booktitle (helm-bibtex-get-value "booktitle" entry ""))
                          (journal (helm-bibtex-get-value "journal" entry "")))
+                    ;; if `booktitle' or `journal' field is not empty
                     (if (not (and (string= "" booktitle) (string= "" journal)))
                         (cons (cons "=venue=" (concat booktitle journal)) entry)
+                      entry)))
+           ;; comment
+           (entry (let* ((comment (helm-bibtex-get-value "comment" entry "")))
+                    ;; if `comment' field is not empty
+                    (if (not (string= "" comment))
+                      (cons (cons "=comment=" (substring comment 0 1)) entry)
                       entry)))
            ; Check for notes:
            (entry (if (or
@@ -561,18 +572,18 @@ find a PDF file."
    for entry = (cdr entry)
    for entry-key = (helm-bibtex-get-value "=key=" entry)
    if (assoc-string "author" entry 'case-fold)
-     for fields = '("author" "title" "year" "=has-pdf=" "=has-note=" "=venue=")
+     for fields = '("author" "title" "year" "=has-pdf=" "=has-note=" "=comment=" "=venue=")
    else
-     for fields = '("editor" "title" "year" "=has-pdf=" "=has-note=" "=venue=")
+     for fields = '("editor" "title" "year" "=has-pdf=" "=has-note=" "=comment=" "=venue=")
    for fields = (-map (lambda (it)
                         (helm-bibtex-clean-string
                           (helm-bibtex-get-value it entry " ")))
                       fields)
    for fields = (-update-at 0 'helm-bibtex-shorten-authors fields)
    collect
-   (cons (s-format "$0  $1 $2 $3$4 $5" 'elt
+   (cons (s-format "$0  $1 $2 $3$4$5 $6" 'elt
                    (-zip-with (lambda (f w) (truncate-string-to-width f w 0 ?\s))
-                              fields (list 14 (- width 39) 4 1 1 14)))
+                              fields (list 14 (- width 40) 4 1 1 1 14)))
          entry-key)))
 
 
