@@ -877,7 +877,7 @@ defined.  Surrounding curly braces are stripped."
              unless (member name
                             (append (-map (lambda (it) (if (symbolp it) (symbol-name it) it))
                                           helm-bibtex-no-export-fields)
-                             '("=venue=" "=comment=" "=type=" "=key=" "=has-pdf=" "=has-note=" "crossref" "keywords" "file")))
+                             '("=venue=" "=comment=" "=type=" "=key=" "=has-pdf=" "=has-note=" "crossref" "keywords" "file" "owner" "timestamp")))
              concat
              (format "  %s = %s,\n" name value)))))
 
