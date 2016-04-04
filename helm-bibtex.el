@@ -364,7 +364,7 @@ is the entry (only the fields listed above) as an alist."
                ;;(entries (nreverse entries)))
               )
           (setq helm-bibtex-cached-candidates
-                (--map (cons (helm-bibtex-clean-string
+                (-map (cons (helm-bibtex-clean-string
                               (s-join " " (-map #'cdr it))) it)
                        entries)))
         (setq helm-bibtex-bibliography-hash bibliography-hash)
@@ -478,7 +478,7 @@ path of the first matching PDF is returned."
   (let* ((key (if (stringp key-or-entry) key-or-entry
                 (helm-bibtex-get-value "=key=" key-or-entry)))
          (path (-first 'f-file?
-                       (--map (f-join it (s-concat key ".pdf"))
+                       (-map (f-join it (s-concat key ".pdf"))
                               (-flatten (list helm-bibtex-library-path))))))
     (when path (list path))))
 
@@ -667,12 +667,12 @@ for arguments if the commands can take any."
          (postnote (if helm-bibtex-cite-prompt-for-optional-arguments (read-from-minibuffer "Postnote: ") ""))
          (prenote  (if (string= "" prenote)  "" (concat prenote  " ")))
          (postnote (if (string= "" postnote) "" (concat ", " postnote))))
-    (format "[%s%s%s]" prenote (s-join "; " (--map (concat "@" it) keys)) postnote)))
+    (format "[%s%s%s]" prenote (s-join "; " (-map (concat "@" it) keys)) postnote)))
 
 (defun helm-bibtex-format-citation-ebib (keys)
   "Formatter for ebib references."
   (s-join ", "
-          (--map (format "ebib:%s" it) keys)))
+          (-map (format "ebib:%s" it) keys)))
 
 (defun helm-bibtex-format-citation-org-link-to-PDF (keys)
   "Formatter for org-links to PDF.  Uses first matching PDF if
@@ -681,7 +681,7 @@ omitted."
   (s-join ", " (cl-loop
                 for key in keys
                 for pdfs = (helm-bibtex-find-pdf key)
-                append (--map (format "[[%s][%s]]" it key) pdfs))))
+                append (-map (format "[[%s][%s]]" it key) pdfs))))
 
 (defun helm-bibtex-insert-citation (_)
   "Insert citation at point.  The format depends on
@@ -697,7 +697,7 @@ omitted."
 (defun helm-bibtex-insert-reference (_)
   "Insert a reference for each selected entry."
   (let* ((keys (helm-marked-candidates :with-wildcard t))
-         (refs (--map
+         (refs (-map
                 (s-word-wrap fill-column
                              (concat "\n- " (helm-bibtex-apa-format-reference it)))
                 keys)))
@@ -863,7 +863,7 @@ defined.  Surrounding curly braces are stripped."
   "Insert BibTeX key at point."
   (let ((keys (helm-marked-candidates :with-wildcard t)))
     (with-helm-current-buffer
-      (insert (s-join "\n" (--map (helm-bibtex-make-bibtex it) keys))))))
+      (insert (s-join "\n" (-map (helm-bibtex-make-bibtex it) keys))))))
 
 (defun helm-bibtex-make-bibtex (key)
   (let* ((entry (helm-bibtex-get-entry key))
@@ -1012,7 +1012,7 @@ resources defined in `helm-bibtex-fallback-options' plus one
 entry for each BibTeX file that will open that file for editing."
   (let ((bib-files (-flatten (list helm-bibtex-bibliography))))
     (-concat
-      (--map (cons (s-concat "Create new entry in " (f-filename it))
+      (-map (cons (s-concat "Create new entry in " (f-filename it))
                    `(lambda () (find-file ,it) (goto-char (point-max)) (newline)))
              bib-files)
       helm-bibtex-fallback-options)))
