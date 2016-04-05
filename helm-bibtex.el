@@ -364,8 +364,8 @@ is the entry (only the fields listed above) as an alist."
                ;;(entries (nreverse entries)))
               )
           (setq helm-bibtex-cached-candidates
-                (-map (cons (helm-bibtex-clean-string
-                              (s-join " " (-map #'cdr it))) it)
+                (--map (cons (helm-bibtex-clean-string
+                              (s-join " " (--map #'cdr it))) it)
                        entries)))
         (setq helm-bibtex-bibliography-hash bibliography-hash)
 	  )
@@ -406,7 +406,7 @@ appeared in the BibTeX files."
    for entry-type = (parsebib-find-next-item)
    while entry-type
    unless (member-ignore-case entry-type '("preamble" "string" "comment"))
-   collect (-map (lambda (it) (cons (downcase (car it)) (cdr it)))
+   collect (--map (lambda (it) (cons (downcase (car it)) (cdr it)))
                  (parsebib-read-entry entry-type))))
 
 (defun helm-bibtex-get-entry (entry-key)
@@ -436,7 +436,7 @@ appended to the requested entry."
   "Do some preprocessing of the entries."
   (cl-loop
    with fields = (append '("title" "year" "crossref")
-                         (-map (lambda (it) (if (symbolp it) (symbol-name it) it))
+                         (--map (lambda (it) (if (symbolp it) (symbol-name it) it))
                                helm-bibtex-additional-search-fields))
    for entry in entries
    collect (helm-bibtex-prepare-entry entry
@@ -478,7 +478,7 @@ path of the first matching PDF is returned."
   (let* ((key (if (stringp key-or-entry) key-or-entry
                 (helm-bibtex-get-value "=key=" key-or-entry)))
          (path (-first 'f-file?
-                       (-map (f-join it (s-concat key ".pdf"))
+                       (--map (f-join it (s-concat key ".pdf"))
                               (-flatten (list helm-bibtex-library-path))))))
     (when path (list path))))
 
@@ -576,7 +576,7 @@ find a PDF file."
      for fields = '("author" "title" "year" "=has-pdf=" "=has-note=" "=comment=" "=venue=")
    else
      for fields = '("editor" "title" "year" "=has-pdf=" "=has-note=" "=comment=" "=venue=")
-   for fields = (-map (lambda (it)
+   for fields = (--map (lambda (it)
                         (helm-bibtex-clean-string
                           (helm-bibtex-get-value it entry " ")))
                       fields)
@@ -616,7 +616,7 @@ in `helm-bibtex-library-path' are searched.  If there are several
 matching PDFs for an entry, the first is opened."
   (--if-let
       (-flatten
-       (-map 'helm-bibtex-find-pdf (helm-marked-candidates :with-wildcard t)))
+       (--map 'helm-bibtex-find-pdf (helm-marked-candidates :with-wildcard t)))
       (-each it helm-bibtex-pdf-open-function)
     (message "No PDF(s) found.")))
 
@@ -667,12 +667,12 @@ for arguments if the commands can take any."
          (postnote (if helm-bibtex-cite-prompt-for-optional-arguments (read-from-minibuffer "Postnote: ") ""))
          (prenote  (if (string= "" prenote)  "" (concat prenote  " ")))
          (postnote (if (string= "" postnote) "" (concat ", " postnote))))
-    (format "[%s%s%s]" prenote (s-join "; " (-map (concat "@" it) keys)) postnote)))
+    (format "[%s%s%s]" prenote (s-join "; " (--map (concat "@" it) keys)) postnote)))
 
 (defun helm-bibtex-format-citation-ebib (keys)
   "Formatter for ebib references."
   (s-join ", "
-          (-map (format "ebib:%s" it) keys)))
+          (--map (format "ebib:%s" it) keys)))
 
 (defun helm-bibtex-format-citation-org-link-to-PDF (keys)
   "Formatter for org-links to PDF.  Uses first matching PDF if
@@ -681,7 +681,7 @@ omitted."
   (s-join ", " (cl-loop
                 for key in keys
                 for pdfs = (helm-bibtex-find-pdf key)
-                append (-map (format "[[%s][%s]]" it key) pdfs))))
+                append (--map (format "[[%s][%s]]" it key) pdfs))))
 
 (defun helm-bibtex-insert-citation (_)
   "Insert citation at point.  The format depends on
@@ -697,7 +697,7 @@ omitted."
 (defun helm-bibtex-insert-reference (_)
   "Insert a reference for each selected entry."
   (let* ((keys (helm-marked-candidates :with-wildcard t))
-         (refs (-map
+         (refs (--map
                 (s-word-wrap fill-column
                              (concat "\n- " (helm-bibtex-apa-format-reference it)))
                 keys)))
@@ -795,7 +795,7 @@ guidelines.  Return DEFAULT if FIELD is not present in ENTRY."
              (let ((p (s-split " *, *" a t)))
                (concat
                 (car p) ", "
-                (s-join " " (-map (lambda (it) (concat (s-left 1 it) "."))
+                (s-join " " (--map (lambda (it) (concat (s-left 1 it) "."))
                                   (s-split " " (cadr p))))))
              into authors
            else
@@ -803,7 +803,7 @@ guidelines.  Return DEFAULT if FIELD is not present in ENTRY."
              (let ((p (s-split " " a t)))
                (concat
                 (-last-item p) ", "
-                (s-join " " (-map (lambda (it) (concat (s-left 1 it) "."))
+                (s-join " " (--map (lambda (it) (concat (s-left 1 it) "."))
                                   (-butlast p)))))
              into authors
            finally return
@@ -820,7 +820,7 @@ guidelines.  Return DEFAULT if FIELD is not present in ENTRY."
              collect
              (let ((p (s-split " *, *" a t)))
                (concat
-                (s-join " " (-map (lambda (it) (concat (s-left 1 it) "."))
+                (s-join " " (--map (lambda (it) (concat (s-left 1 it) "."))
                                   (s-split " " (cadr p))))
                 " " (car p)))
              into authors
@@ -828,7 +828,7 @@ guidelines.  Return DEFAULT if FIELD is not present in ENTRY."
              collect
              (let ((p (s-split " " a t)))
                (concat
-                (s-join " " (-map (lambda (it) (concat (s-left 1 it) "."))
+                (s-join " " (--map (lambda (it) (concat (s-left 1 it) "."))
                                   (-butlast p)))
                 " " (-last-item p)))
              into authors
@@ -863,7 +863,7 @@ defined.  Surrounding curly braces are stripped."
   "Insert BibTeX key at point."
   (let ((keys (helm-marked-candidates :with-wildcard t)))
     (with-helm-current-buffer
-      (insert (s-join "\n" (-map (helm-bibtex-make-bibtex it) keys))))))
+      (insert (s-join "\n" (--map (helm-bibtex-make-bibtex it) keys))))))
 
 (defun helm-bibtex-make-bibtex (key)
   (let* ((entry (helm-bibtex-get-entry key))
@@ -875,7 +875,7 @@ defined.  Surrounding curly braces are stripped."
              for name = (car field)
              for value = (cdr field)
              unless (member name
-                            (append (-map (lambda (it) (if (symbolp it) (symbol-name it) it))
+                            (append (--map (lambda (it) (if (symbolp it) (symbol-name it) it))
                                           helm-bibtex-no-export-fields)
                              '("=venue=" "=comment=" "=type=" "=key=" "=has-pdf=" "=has-note=" "crossref" "keywords" "file" "comment" "owner" "timestamp")))
              concat
@@ -885,7 +885,7 @@ defined.  Surrounding curly braces are stripped."
   "Attach the PDFs of the selected entries where available."
   (--if-let
       (-flatten
-       (-map 'helm-bibtex-find-pdf (helm-marked-candidates :with-wildcard t)))
+       (--map 'helm-bibtex-find-pdf (helm-marked-candidates :with-wildcard t)))
       (-each it 'mml-attach-file)
     (message "No PDF(s) found.")))
 
@@ -1001,7 +1001,7 @@ line."
           (or helm-bibtex-browser-function
               browse-url-browser-function))
          (terms (s-split "\s+" helm-pattern))
-         (terms (-map 'url-hexify-string terms))
+         (terms (--map 'url-hexify-string terms))
          (terms (if (> (length terms) 1) (cons "AND" terms) terms)))
     (helm-browse-url (format "http://arxiv.org/find/all/1/all:+%s/0/1/0/all/0/1"
                              (s-join "+" terms)))))
@@ -1012,7 +1012,7 @@ resources defined in `helm-bibtex-fallback-options' plus one
 entry for each BibTeX file that will open that file for editing."
   (let ((bib-files (-flatten (list helm-bibtex-bibliography))))
     (-concat
-      (-map (cons (s-concat "Create new entry in " (f-filename it))
+      (--map (cons (s-concat "Create new entry in " (f-filename it))
                    `(lambda () (find-file ,it) (goto-char (point-max)) (newline)))
              bib-files)
       helm-bibtex-fallback-options)))
