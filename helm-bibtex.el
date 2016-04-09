@@ -924,7 +924,7 @@ defined.  Surrounding curly braces are stripped."
   (--if-let
       (-flatten
        (-map 'helm-bibtex-find-pdf (helm-marked-candidates :with-wildcard t)))
-      (-each it (lambda(fpath) (copy-file fpath helm-bibtex-dropbox-path)))
+      (-each it (lambda(fpath) (f-copy fpath helm-bibtex-dropbox-path)))
     (message "No PDF(s) found.")))
 
 (define-minor-mode helm-bibtex-notes-mode
