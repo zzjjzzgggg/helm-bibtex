@@ -608,7 +608,6 @@ values."
                concat (car p))
     nil))
 
-
 (defun helm-bibtex-open-pdf (_)
   "Open the PDFs associated with the marked entries using the
 function specified in `helm-bibtex-pdf-open-function'.  All paths
@@ -619,6 +618,17 @@ matching PDFs for an entry, the first is opened."
        (-map 'helm-bibtex-find-pdf (helm-marked-candidates :with-wildcard t)))
       (-each it helm-bibtex-pdf-open-function)
     (message "No PDF(s) found.")))
+
+(defun helm-bibtex-open-pdf-emacs (_)
+  "Open the PDFs associated with the marked entries in emacs.  All paths
+in `helm-bibtex-library-path' are searched.  If there are several
+matching PDFs for an entry, the first is opened."
+  (--if-let
+      (-flatten
+       (-map 'helm-bibtex-find-pdf (helm-marked-candidates :with-wildcard t)))
+      (-each it 'find-file)
+    (message "No PDF(s) found.")))
+
 
 (defun helm-bibtex-open-url-or-doi (_)
   "Open the associated URL or DOI in a browser."
@@ -1024,7 +1034,7 @@ entry for each BibTeX file that will open that file for editing."
     (candidates                                . helm-bibtex-candidates)
     (filtered-candidate-transformer            . helm-bibtex-candidates-formatter)
     (action . (("Open PDF file (if present)"   . helm-bibtex-open-pdf)
-               ("Open URL or DOI in browser"   . helm-bibtex-open-url-or-doi)
+               ("Open PDF in Emacs"			   . helm-bibtex-open-pdf-emacs)
                ("Insert citation"              . helm-bibtex-insert-citation)
                ("Insert reference"             . helm-bibtex-insert-reference)
                ("Insert BibTeX key"            . helm-bibtex-insert-key)
