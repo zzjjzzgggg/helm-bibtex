@@ -131,6 +131,11 @@ publication.  This should be a single character."
   :group 'helm-bibtex
   :type 'string)
 
+(defcustom helm-bibtex-dropbox-path "~/Dropbox"
+  "Symbol used to indicate the Dropbox directory."
+  :group 'helm-bibtex
+  :type 'string)
+
 (defcustom helm-bibtex-format-citation-functions
   '((org-mode      . helm-bibtex-format-citation-ebib)
     (latex-mode    . helm-bibtex-format-citation-cite)
@@ -913,6 +918,15 @@ defined.  Surrounding curly braces are stripped."
       (-each it 'mml-attach-file)
     (message "No PDF(s) found.")))
 
+
+(defun helm-bibtex-send-pdf-dropbox (_)
+  "Attach the PDFs of the selected entries where available."
+  (--if-let
+      (-flatten
+       (-map 'helm-bibtex-find-pdf (helm-marked-candidates :with-wildcard t)))
+      (-each it (lambda(fpath) (copy-file fpath helm-bibtex-dropbox-path)))
+    (message "No PDF(s) found.")))
+
 (define-minor-mode helm-bibtex-notes-mode
   "Minor mode for managing helm-bibtex notes."
   :keymap (let ((map (make-sparse-keymap)))
@@ -1047,14 +1061,15 @@ entry for each BibTeX file that will open that file for editing."
     (init                                      . helm-bibtex-init)
     (candidates                                . helm-bibtex-candidates)
     (filtered-candidate-transformer            . helm-bibtex-candidates-formatter)
-    (action . (("Open PDF file (if present)"   . helm-bibtex-open-pdf)
-               ("Open PDF in Zathura"			   . helm-bibtex-open-pdf-zathura)
+    (action . (("Open PDF file in Emacs"       . helm-bibtex-open-pdf)
+               ("Open PDF in Zathura"		   . helm-bibtex-open-pdf-zathura)
                ("Open PDF in Okular"		   . helm-bibtex-open-pdf-okular)
                ("Insert citation"              . helm-bibtex-insert-citation)
                ("Insert reference"             . helm-bibtex-insert-reference)
                ("Insert BibTeX key"            . helm-bibtex-insert-key)
                ("Insert BibTeX entry"          . helm-bibtex-insert-bibtex)
-               ("Attach PDF to email"          . helm-bibtex-add-PDF-attachment)
+               ("Attach PDF to Email"          . helm-bibtex-add-PDF-attachment)
+               ("Send PDF to Dropbox"          . helm-bibtex-send-pdf-dropbox)
                ("Edit notes"                   . helm-bibtex-edit-notes)
                ("Show entry"                   . helm-bibtex-show-entry))))
   "Source for searching in BibTeX files.")
