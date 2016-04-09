@@ -630,6 +630,19 @@ matching PDFs for an entry, the first is opened."
     (message "No PDF(s) found.")))
 
 
+
+(defun helm-bibtex-open-pdf-okular (_)
+  "Open the PDFs associated with the marked entries in Okular.  All paths
+in `helm-bibtex-library-path' are searched.  If there are several
+matching PDFs for an entry, the first is opened."
+  (--if-let
+      (-flatten
+       (-map 'helm-bibtex-find-pdf (helm-marked-candidates :with-wildcard t)))
+      (-each it (lambda(fpath) 
+				  (call-process "okular" nil 0 nil fpath)))
+    (message "No PDF(s) found.")))
+
+
 (defun helm-bibtex-open-url-or-doi (_)
   "Open the associated URL or DOI in a browser."
   (let ((keys (helm-marked-candidates :with-wildcard t)))
@@ -1035,6 +1048,7 @@ entry for each BibTeX file that will open that file for editing."
     (filtered-candidate-transformer            . helm-bibtex-candidates-formatter)
     (action . (("Open PDF file (if present)"   . helm-bibtex-open-pdf)
                ("Open PDF in Emacs"			   . helm-bibtex-open-pdf-emacs)
+               ("Open PDF in Okular"		   . helm-bibtex-open-pdf-okular)
                ("Insert citation"              . helm-bibtex-insert-citation)
                ("Insert reference"             . helm-bibtex-insert-reference)
                ("Insert BibTeX key"            . helm-bibtex-insert-key)
