@@ -620,7 +620,7 @@ matching PDFs for an entry, the first is opened."
     (message "No PDF(s) found.")))
 
 (defun helm-bibtex-open-pdf-zathura(_)
-  "Open the PDFs associated with the marked entries in emacs.  All paths
+  "Open the PDFs associated with the marked entries in Zathura.  All paths
 in `helm-bibtex-library-path' are searched.  If there are several
 matching PDFs for an entry, the first is opened."
   (--if-let
