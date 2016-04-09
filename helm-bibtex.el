@@ -619,14 +619,15 @@ matching PDFs for an entry, the first is opened."
       (-each it helm-bibtex-pdf-open-function)
     (message "No PDF(s) found.")))
 
-(defun helm-bibtex-open-pdf-emacs (_)
+(defun helm-bibtex-open-pdf-zathura(_)
   "Open the PDFs associated with the marked entries in emacs.  All paths
 in `helm-bibtex-library-path' are searched.  If there are several
 matching PDFs for an entry, the first is opened."
   (--if-let
       (-flatten
        (-map 'helm-bibtex-find-pdf (helm-marked-candidates :with-wildcard t)))
-      (-each it 'find-file)
+      (-each it (lambda(fpath)
+				  (call-process "zathura" nil 0 nil fpath)))
     (message "No PDF(s) found.")))
 
 
@@ -1047,7 +1048,7 @@ entry for each BibTeX file that will open that file for editing."
     (candidates                                . helm-bibtex-candidates)
     (filtered-candidate-transformer            . helm-bibtex-candidates-formatter)
     (action . (("Open PDF file (if present)"   . helm-bibtex-open-pdf)
-               ("Open PDF in Emacs"			   . helm-bibtex-open-pdf-emacs)
+               ("Open PDF in Zathura"			   . helm-bibtex-open-pdf-zathura)
                ("Open PDF in Okular"		   . helm-bibtex-open-pdf-okular)
                ("Insert citation"              . helm-bibtex-insert-citation)
                ("Insert reference"             . helm-bibtex-insert-reference)
