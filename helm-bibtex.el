@@ -201,13 +201,7 @@ should be a single character."
 
 (defcustom helm-bibtex-fallback-options
   '(("Google Scholar" . "https://scholar.google.co.uk/scholar?q=%s")
-    ("Pubmed" . "https://www.ncbi.nlm.nih.gov/pubmed/?term=%s")
-    ("arXiv" . helm-bibtex-arxiv)
-    ("Bodleian Library" . "http://solo.bodleian.ox.ac.uk/primo_library/libweb/action/search.do?vl(freeText0)=%s&fn=search&tab=all")
-    ("Library of Congress" . "https://www.loc.gov/search/?q=%s&all=true&st=list")
-    ("Deutsche Nationalbibliothek" . "https://portal.dnb.de/opac.htm?query=%s")
-    ("British National Library" . "http://explore.bl.uk/primo_library/libweb/action/search.do?&vl(freeText0)=%s&fn=search")
-    ("Gallica Bibliothèque Numérique" . "http://gallica.bnf.fr/Search?q=%s"))
+    ("arXiv" . helm-bibtex-arxiv))
   "Alist of online sources that can be used to search for
 publications.  The key of each entry is the name of the online
 source.  The value is the URL used for retrieving results.  This
@@ -644,7 +638,7 @@ matching PDFs for an entry, the first is opened."
   (--if-let
       (-flatten
        (-map 'helm-bibtex-find-pdf (helm-marked-candidates :with-wildcard t)))
-      (-each it (lambda(fpath) 
+      (-each it (lambda(fpath)
 				  (call-process "okular" nil 0 nil fpath)))
     (message "No PDF(s) found.")))
 
