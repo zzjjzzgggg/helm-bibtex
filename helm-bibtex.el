@@ -87,7 +87,7 @@
 ;; for searching in online databases.  Apart from that, familiarize
 ;; yourself with Helm.  It's more powerful that you might think.
 
-;;; Code:
+
 
 (require 'helm)
 (require 'helm-net)
