@@ -125,7 +125,7 @@ systems default viewer for PDFs is used."
   :group 'helm-bibtex
   :type 'function)
 
-(defcustom helm-bibtex-pdf-symbol "⌘"
+(defcustom helm-bibtex-pdf-symbol "#"
   "Symbol used to indicate that a PDF file is available for a
 publication.  This should be a single character."
   :group 'helm-bibtex
