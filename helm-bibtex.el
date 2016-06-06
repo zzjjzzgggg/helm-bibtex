@@ -1054,14 +1054,14 @@ entry for each BibTeX file that will open that file for editing."
              bib-files)
       helm-bibtex-fallback-options)))
 
-
+
 (defvar helm-source-bibtex
   '((name                             . "BibTeX entries")
     (init                             . helm-bibtex-init)
     (candidates                       . helm-bibtex-candidates)
     (filtered-candidate-transformer   . helm-bibtex-candidates-formatter)
     (action . (("Open PDF in Emacs"   . helm-bibtex-open-pdf)
-               ("Open PDF in zathura"	. helm-bibtex-open-pdf-zathura)
+               ("Open PDF in Zathura" . helm-bibtex-open-pdf-zathura)
                ("Open PDF in Okular"  . helm-bibtex-open-pdf-okular)
                ("Insert citation"     . helm-bibtex-insert-citation)
                ("Insert reference"    . helm-bibtex-insert-reference)
