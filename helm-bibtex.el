@@ -883,10 +883,15 @@ defined.  Surrounding curly braces are stripped."
         (funcall 'helm-bibtex-format-citation-default keys)))))
 
 (defun helm-bibtex-insert-bibtex (_)
-  "Insert BibTeX key at point."
+  "Insert BibTeX entry at point."
   (let ((keys (helm-marked-candidates :with-wildcard t)))
     (with-helm-current-buffer
       (insert (s-join "\n" (--map (helm-bibtex-make-bibtex it) keys))))))
+
+(defun helm-bibtex-copy-bibtex (_)
+  "copy BibTeX entry."
+  (let ((keys (helm-marked-candidates :with-wildcard t)))
+      (kill-new (s-join "\n" (--map (helm-bibtex-make-bibtex it) keys)))))
 
 (defun helm-bibtex-make-bibtex (key)
   (let* ((entry (helm-bibtex-get-entry key))
@@ -1056,13 +1061,13 @@ entry for each BibTeX file that will open that file for editing."
     (candidates                       . helm-bibtex-candidates)
     (filtered-candidate-transformer   . helm-bibtex-candidates-formatter)
     (action . (("Open PDF in Emacs"   . helm-bibtex-open-pdf)
-               ("Open PDF in zathura"	  . helm-bibtex-open-pdf-zathura)
+               ("Open PDF in zathura"	. helm-bibtex-open-pdf-zathura)
                ("Open PDF in Okular"  . helm-bibtex-open-pdf-okular)
                ("Insert citation"     . helm-bibtex-insert-citation)
                ("Insert reference"    . helm-bibtex-insert-reference)
                ("Insert BibTeX key"   . helm-bibtex-insert-key)
                ("Insert BibTeX entry" . helm-bibtex-insert-bibtex)
-               ("Attach PDF to Email" . helm-bibtex-add-PDF-attachment)
+               ("Copy Bibtex entry"   . helm-bibtex-copy-bibtex)
                ("Send PDF to Dropbox" . helm-bibtex-send-pdf-dropbox)
                ("Edit notes"          . helm-bibtex-edit-notes)
                ("Show entry"          . helm-bibtex-show-entry))))
