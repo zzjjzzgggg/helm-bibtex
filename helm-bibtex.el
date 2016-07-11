@@ -5,7 +5,8 @@
 ;; Author: Titus von der Malsburg <malsburg@posteo.de>
 ;; Maintainer: Titus von der Malsburg <malsburg@posteo.de>
 ;; Version: 1.0.0
-;; Package-Version: 20160325.1526
+;; Package-Version: 20160606.1514
+;; Package-X-Original-Version: 20160325.1526
 ;; Package-X-Original-Version: 20160323.2235
 ;; Package-X-Original-Version: 20160321.1728
 ;; Package-X-Original-Version: 20160314.1613
@@ -905,7 +906,7 @@ defined.  Surrounding curly braces are stripped."
              unless (member name
                             (append (-map (lambda (it) (if (symbolp it) (symbol-name it) it))
                                           helm-bibtex-no-export-fields)
-                             '("=venue=" "=comment=" "=type=" "=key=" "=has-pdf=" "=has-note=" "crossref" "keywords" "file" "comment" "owner" "timestamp")))
+                             '("=venue=" "=comment=" "=type=" "=key=" "=has-pdf=" "=has-note=" "crossref" "keywords" "file" "comment" "owner" "timestamp" "__markedentry" "groups")))
              concat
              (format "  %s = %s,\n" name value)))))
 
