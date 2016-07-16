@@ -5,7 +5,8 @@
 ;; Author: Titus von der Malsburg <malsburg@posteo.de>
 ;; Maintainer: Titus von der Malsburg <malsburg@posteo.de>
 ;; Version: 1.0.0
-;; Package-Version: 20160606.1514
+;; Package-Version: 20160711.855
+;; Package-X-Original-Version: 20160606.1514
 ;; Package-X-Original-Version: 20160325.1526
 ;; Package-X-Original-Version: 20160323.2235
 ;; Package-X-Original-Version: 20160321.1728
@@ -92,7 +93,6 @@
 
 (require 'helm)
 (require 'helm-net)
-(require 'helm-plugin)
 (require 'helm-easymenu)
 (require 'parsebib)
 (require 'cl-lib)
