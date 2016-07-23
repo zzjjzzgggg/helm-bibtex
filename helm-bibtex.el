@@ -1104,7 +1104,7 @@ reread."
   (helm :sources '(helm-source-bibtex helm-source-fallback-options)
         :full-frame helm-bibtex-full-frame
         :buffer "*helm bibtex*"
-        :candidate-number-limit 200))
+        :candidate-number-limit 100))
 
 (provide 'helm-bibtex)
 
