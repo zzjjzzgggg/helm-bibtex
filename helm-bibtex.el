@@ -5,7 +5,8 @@
 ;; Author: Titus von der Malsburg <malsburg@posteo.de>
 ;; Maintainer: Titus von der Malsburg <malsburg@posteo.de>
 ;; Version: 1.0.0
-;; Package-Version: 20160711.855
+;; Package-Version: 20160716.946
+;; Package-X-Original-Version: 20160711.855
 ;; Package-X-Original-Version: 20160606.1514
 ;; Package-X-Original-Version: 20160325.1526
 ;; Package-X-Original-Version: 20160323.2235
@@ -1057,22 +1058,23 @@ entry for each BibTeX file that will open that file for editing."
 
 
 (defvar helm-source-bibtex
-  '((name                             . "BibTeX entries")
-    (init                             . helm-bibtex-init)
-    (candidates                       . helm-bibtex-candidates)
-    (filtered-candidate-transformer   . helm-bibtex-candidates-formatter)
-    (action . (("Open PDF in Emacs"   . helm-bibtex-open-pdf)
-               ("Open PDF in Zathura" . helm-bibtex-open-pdf-zathura)
-               ("Open PDF in Okular"  . helm-bibtex-open-pdf-okular)
-               ("Insert citation"     . helm-bibtex-insert-citation)
-               ("Insert reference"    . helm-bibtex-insert-reference)
-               ("Insert BibTeX key"   . helm-bibtex-insert-key)
-               ("Insert BibTeX entry" . helm-bibtex-insert-bibtex)
-               ("Copy Bibtex entry"   . helm-bibtex-copy-bibtex)
-               ("Send PDF to Dropbox" . helm-bibtex-send-pdf-dropbox)
-               ("Edit notes"          . helm-bibtex-edit-notes)
-               ("Show entry"          . helm-bibtex-show-entry))))
-  "Source for searching in BibTeX files.")
+  (helm-build-sync-source "BibTeX entries"
+    :init 'helm-bibtex-init
+    :candidates 'helm-bibtex-candidates
+    :filtered-candidate-transformer 'helm-bibtex-candidates-formatter
+    :action (helm-make-actions
+		"Open PDF in Emacs"   'helm-bibtex-open-pdf
+        "Open PDF in Zathura" 'helm-bibtex-open-pdf-zathura
+        "Open PDF in Okular"  'helm-bibtex-open-pdf-okular
+        "Insert citation"     'helm-bibtex-insert-citation
+        "Insert reference"    'helm-bibtex-insert-reference
+        "Insert BibTeX key"   'helm-bibtex-insert-key
+        "Insert BibTeX entry" 'helm-bibtex-insert-bibtex
+        "Copy Bibtex entry"   'helm-bibtex-copy-bibtex
+        "Send PDF to Dropbox" 'helm-bibtex-send-pdf-dropbox
+        "Edit notes"          'helm-bibtex-edit-notes
+        "Show entry"          'helm-bibtex-show-entry))
+"Source for searching in BibTeX files.")
 
 (defvar helm-source-fallback-options
   '((name            . "Fallback options")
