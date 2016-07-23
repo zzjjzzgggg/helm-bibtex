@@ -368,11 +368,8 @@ is the entry (only the fields listed above) as an alist."
                 (--map (cons (helm-bibtex-clean-string
                               (s-join " " (-map #'cdr it))) it)
                        entries)))
-        (setq helm-bibtex-bibliography-hash bibliography-hash)
-	  )
-      helm-bibtex-cached-candidates)
-  )
-)
+        (setq helm-bibtex-bibliography-hash bibliography-hash))
+      helm-bibtex-cached-candidates)))
 
 (defun helm-bibtex-cmp-by-year (e1 e2)
   (if (not (string< (helm-bibtex-get-value "year" e1) (helm-bibtex-get-value "year" e2))) t nil))
@@ -552,7 +549,7 @@ find a PDF file."
                             :test (lambda (x y) (string= (s-downcase x) (s-downcase y)))
                             :key 'car :from-end t))))
 
-
+
 ;; The function `window-width' does not necessarily report the correct
 ;; number of characters that fit on a line.  This is a
 ;; work-around.  See also this bug report:
@@ -588,7 +585,7 @@ find a PDF file."
                               fields (list 14 (- width 40) 4 1 1 1 14)))
          entry-key)))
 
-
+
 (defun helm-bibtex-clean-string (s)
   "Removes quoting and superfluous white space from BibTeX field
 values."
@@ -904,10 +901,18 @@ defined.  Surrounding curly braces are stripped."
              for field in entry
              for name = (car field)
              for value = (cdr field)
-             unless (member name
-                            (append (-map (lambda (it) (if (symbolp it) (symbol-name it) it))
-                                          helm-bibtex-no-export-fields)
-                             '("=venue=" "=comment=" "=type=" "=key=" "=has-pdf=" "=has-note=" "crossref" "keywords" "file" "comment" "owner" "timestamp" "__markedentry" "groups")))
+             unless (member
+                     name
+                     (append
+                      (-map
+                       (lambda (it)
+                         (if (symbolp it)
+                             (symbol-name it)
+                           it))
+                       helm-bibtex-no-export-fields)
+                      '("=venue=" "=comment=" "=type=" "=key=" "=has-pdf="
+                        "=has-note=" "crossref" "keywords" "file" "comment"
+                        "owner" "timestamp" "__markedentry" "groups")))
              concat
              (format "  %s = %s,\n" name value)))))
 
@@ -969,7 +974,7 @@ line."
 (defun helm-bibtex-edit-notes (key)
   "Open the notes associated with the entry using `find-file'."
   (if (f-directory? helm-bibtex-notes-path)
-                                        ; One notes file per publication:
+      ;; One notes file per publication:
       (let ((path (f-join helm-bibtex-notes-path
                           (s-concat key helm-bibtex-notes-extension))))
         (find-file path)
@@ -977,7 +982,7 @@ line."
           (insert (s-format helm-bibtex-notes-template-multiple-files
                             'helm-bibtex-apa-get-value
                             (helm-bibtex-get-entry key)))))
-                                        ; One file for all notes:
+    ;; One file for all notes:
     (unless (and buffer-file-name
                  (f-same? helm-bibtex-notes-path buffer-file-name))
       (find-file-other-window helm-bibtex-notes-path))
@@ -985,13 +990,13 @@ line."
     (show-all)
     (goto-char (point-min))
     (if (re-search-forward (format helm-bibtex-notes-key-pattern key) nil t)
-                                        ; Existing entry found:
+        ;; Existing entry found:
         (when (eq major-mode 'org-mode)
           (org-narrow-to-subtree)
           (re-search-backward "^\*+ " nil t)
           (org-cycle-hide-drawers nil)
           (helm-bibtex-notes-mode 1))
-                                        ; Create a new entry:
+      ;; Create a new entry:
       (let ((entry (helm-bibtex-get-entry key)))
         (goto-char (point-max))
         (insert (s-format helm-bibtex-notes-template-one-file
@@ -1052,7 +1057,10 @@ entry for each BibTeX file that will open that file for editing."
   (let ((bib-files (-flatten (list helm-bibtex-bibliography))))
     (-concat
       (--map (cons (s-concat "Create new entry in " (f-filename it))
-                   `(lambda () (find-file ,it) (goto-char (point-max)) (newline)))
+                   `(lambda ()
+                      (find-file ,it)
+                      (goto-char (point-max))
+                      (newline)))
              bib-files)
       helm-bibtex-fallback-options)))
 
@@ -1063,18 +1071,18 @@ entry for each BibTeX file that will open that file for editing."
     :candidates 'helm-bibtex-candidates
     :filtered-candidate-transformer 'helm-bibtex-candidates-formatter
     :action (helm-make-actions
-		"Open PDF in Emacs"   'helm-bibtex-open-pdf
-        "Open PDF in Zathura" 'helm-bibtex-open-pdf-zathura
-        "Open PDF in Okular"  'helm-bibtex-open-pdf-okular
-        "Insert citation"     'helm-bibtex-insert-citation
-        "Insert reference"    'helm-bibtex-insert-reference
-        "Insert BibTeX key"   'helm-bibtex-insert-key
-        "Insert BibTeX entry" 'helm-bibtex-insert-bibtex
-        "Copy Bibtex entry"   'helm-bibtex-copy-bibtex
-        "Send PDF to Dropbox" 'helm-bibtex-send-pdf-dropbox
-        "Edit notes"          'helm-bibtex-edit-notes
-        "Show entry"          'helm-bibtex-show-entry))
-"Source for searching in BibTeX files.")
+             "Open PDF in Emacs"   'helm-bibtex-open-pdf
+             "Open PDF in Zathura" 'helm-bibtex-open-pdf-zathura
+             "Open PDF in Okular"  'helm-bibtex-open-pdf-okular
+             "Insert citation"     'helm-bibtex-insert-citation
+             "Insert reference"    'helm-bibtex-insert-reference
+             "Insert BibTeX key"   'helm-bibtex-insert-key
+             "Insert BibTeX entry" 'helm-bibtex-insert-bibtex
+             "Copy Bibtex entry"   'helm-bibtex-copy-bibtex
+             "Send PDF to Dropbox" 'helm-bibtex-send-pdf-dropbox
+             "Edit notes"          'helm-bibtex-edit-notes
+             "Show entry"          'helm-bibtex-show-entry))
+  "Source for searching in BibTeX files.")
 
 (defvar helm-source-fallback-options
   '((name            . "Fallback options")
@@ -1096,7 +1104,7 @@ reread."
   (helm :sources '(helm-source-bibtex helm-source-fallback-options)
         :full-frame helm-bibtex-full-frame
         :buffer "*helm bibtex*"
-        :candidate-number-limit 100))
+        :candidate-number-limit 200))
 
 (provide 'helm-bibtex)
 
