@@ -1071,6 +1071,7 @@ entry for each BibTeX file that will open that file for editing."
     :candidates 'helm-bibtex-candidates
     :filtered-candidate-transformer 'helm-bibtex-candidates-formatter
     :action (helm-make-actions
+<<<<<<< HEAD
              "Open PDF in Emacs"   'helm-bibtex-open-pdf
              "Open PDF in Zathura" 'helm-bibtex-open-pdf-zathura
              "Open PDF in Okular"  'helm-bibtex-open-pdf-okular
@@ -1083,6 +1084,20 @@ entry for each BibTeX file that will open that file for editing."
              "Edit notes"          'helm-bibtex-edit-notes
              "Show entry"          'helm-bibtex-show-entry))
   "Source for searching in BibTeX files.")
+=======
+		"Open PDF in Emacs"   'helm-bibtex-open-pdf
+        "Open PDF in Zathura" 'helm-bibtex-open-pdf-zathura
+        "Open PDF in Okular"  'helm-bibtex-open-pdf-okular
+        "Insert citation"     'helm-bibtex-insert-citation
+        "Insert reference"    'helm-bibtex-insert-reference
+        "Insert BibTeX key"   'helm-bibtex-insert-key
+        "Insert BibTeX entry" 'helm-bibtex-insert-bibtex
+        "Copy Bibtex entry"   'helm-bibtex-copy-bibtex
+        "Send PDF to Dropbox" 'helm-bibtex-send-pdf-dropbox
+        "Edit notes"          'helm-bibtex-edit-notes
+        "Show entry"          'helm-bibtex-show-entry))
+"Source for searching in BibTeX files.")
+>>>>>>> 408d92e13255e9bf6c76aebac203b2fa1a62ee96
 
 (defvar helm-source-fallback-options
   '((name            . "Fallback options")
