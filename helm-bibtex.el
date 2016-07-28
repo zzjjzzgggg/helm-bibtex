@@ -5,7 +5,8 @@
 ;; Author: Titus von der Malsburg <malsburg@posteo.de>
 ;; Maintainer: Titus von der Malsburg <malsburg@posteo.de>
 ;; Version: 1.0.0
-;; Package-Version: 20160716.946
+;; Package-Version: 20160723.2342
+;; Package-X-Original-Version: 20160716.946
 ;; Package-X-Original-Version: 20160711.855
 ;; Package-X-Original-Version: 20160606.1514
 ;; Package-X-Original-Version: 20160325.1526
@@ -1067,9 +1068,9 @@ entry for each BibTeX file that will open that file for editing."
 
 (defvar helm-source-bibtex
   (helm-build-sync-source "BibTeX entries"
-    :init 'helm-bibtex-init
-    :candidates 'helm-bibtex-candidates
-    :filtered-candidate-transformer 'helm-bibtex-candidates-formatter
+    :init #'helm-bibtex-init
+    :candidates #'helm-bibtex-candidates
+    :filtered-candidate-transformer #'helm-bibtex-candidates-formatter
     :action (helm-make-actions
 		"Open PDF in Emacs"   'helm-bibtex-open-pdf
         "Open PDF in Zathura" 'helm-bibtex-open-pdf-zathura
@@ -1101,7 +1102,7 @@ reread."
   (interactive "P")
   (when arg
     (setq helm-bibtex-bibliography-hash ""))
-  (helm :sources '(helm-source-bibtex helm-source-fallback-options)
+  (helm :sources 'helm-source-bibtex
         :full-frame helm-bibtex-full-frame
         :buffer "*helm bibtex*"
         :candidate-number-limit 100))
