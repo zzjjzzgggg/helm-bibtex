@@ -434,7 +434,7 @@ appended to the requested entry."
 (defun helm-bibtex-prepare-entries (entries)
   "Do some preprocessing of the entries."
   (cl-loop
-   with fields = (append '("title" "year" "crossref")
+   with fields = (append '("title" "year" "keywords" "booktitle" "journal" "groups" "comment")
                          (-map (lambda (it) (if (symbolp it) (symbol-name it) it))
                                helm-bibtex-additional-search-fields))
    for entry in entries
