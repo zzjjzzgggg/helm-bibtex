@@ -5,7 +5,8 @@
 ;; Author: Titus von der Malsburg <malsburg@posteo.de>
 ;; Maintainer: Titus von der Malsburg <malsburg@posteo.de>
 ;; Version: 1.0.0
-;; Package-Version: 20160723.2342
+;; Package-Version: 20160801.1146
+;; Package-X-Original-Version: 20160723.2342
 ;; Package-X-Original-Version: 20160716.946
 ;; Package-X-Original-Version: 20160711.855
 ;; Package-X-Original-Version: 20160606.1514
@@ -360,7 +361,7 @@ is the entry (only the fields listed above) as an alist."
                    (string= helm-bibtex-bibliography-hash bibliography-hash))
         (message "Loading bibliography ...")
         (let* ((entries (helm-bibtex-parse-bibliography))
-               (entries (helm-bibtex-resolve-crossrefs entries))
+               ;;(entries (helm-bibtex-resolve-crossrefs entries))
                (entries (helm-bibtex-prepare-entries entries))
                (entries (sort entries 'helm-bibtex-cmp-by-year))
                ;;(entries (nreverse entries)))
