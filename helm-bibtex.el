@@ -1050,28 +1050,9 @@ entry for each BibTeX file that will open that file for editing."
              bib-files)
       helm-bibtex-fallback-options)))
 
-(defvar helm-bibtex-sort-fun nil)
-
-(defun helm-bibtex-sort ()
-  (interactive)
-	(setq helm-bibtex-sort-fun (lambda (e1 e2)
-	  (string< (helm-bibtex-get-value "year" e2)
-			   (helm-bibtex-get-value "year" e1))))
-    (helm-refresh)
-    (setq helm-bibtex-sort-fun nil))
-
-(defvar helm-bibtex-map
-  (let ((map (make-sparse-keymap)))
-    (set-keymap-parent map helm-map)
-    (define-key map (kbd "M-<down>") 'helm-bibtex-sort)
-    map)
-  "keymap for a helm source.")
-
-
 (defvar helm-source-bibtex
   (helm-build-sync-source "BibTeX entries"
     :init #'helm-bibtex-init
-	:keymap helm-bibtex-map
     :candidates #'helm-bibtex-candidates
     :filtered-candidate-transformer #'helm-bibtex-candidate-formatter
     :action (helm-make-actions
@@ -1103,8 +1084,7 @@ entry for each BibTeX file that will open that file for editing."
 With a prefix ARG the cache is invalidated and the bibliography
 reread."
   (interactive "P")
-  (when arg
-    (setq helm-bibtex-bibliography-hash ""))
+  (when arg (setq helm-bibtex-bibliography-hash ""))
   (helm :sources 'helm-source-bibtex
         :full-frame helm-bibtex-full-frame
         :buffer "*helm bibtex*"
