@@ -543,16 +543,9 @@ find a PDF file."
 
 (defun helm-bibtex-candidate-formatter (candidates source)
   "Formats BibTeX entries for display in results list."
-  (let* ((sorted-candidates
-          (if helm-bibtex-sort-fun
-              (progn
-                (print "sorting...")
-                (print candidates)
-                (sort candidates helm-bibtex-sort-fun))
-            candidates)))
     (cl-loop
      with width = (with-helm-window (helm-bibtex-window-width))
-     for entry in sorted-candidates
+     for entry in candidates
      for entry = (cdr entry)
      for entry-key = (helm-bibtex-get-value "=key=" entry)
      if (assoc-string "author" entry 'case-fold)
@@ -569,7 +562,7 @@ find a PDF file."
                      (-zip-with (lambda (f w)
                                   (truncate-string-to-width f w 0 ?\s))
                                 fields (list 14 (- width 40) 4 1 1 1 14)))
-           entry-key))))
+           entry-key)))
 
 
 (defun helm-bibtex-clean-string (s)
