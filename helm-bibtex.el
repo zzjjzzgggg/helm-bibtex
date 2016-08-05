@@ -363,7 +363,7 @@ is the entry (only the fields listed above) as an alist."
         (let* ((entries (helm-bibtex-parse-bibliography))
                ;;(entries (helm-bibtex-resolve-crossrefs entries))
                (entries (helm-bibtex-prepare-entries entries))
-               (entries (sort entries 'helm-bibtex-cmp-by-year))
+               ;;(entries (sort entries 'helm-bibtex-cmp-by-year))
                ;;(entries (nreverse entries)))
               )
           (setq helm-bibtex-cached-candidates
