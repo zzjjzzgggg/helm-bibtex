@@ -361,11 +361,7 @@ is the entry (only the fields listed above) as an alist."
                    (string= helm-bibtex-bibliography-hash bibliography-hash))
         (message "Loading bibliography ...")
         (let* ((entries (helm-bibtex-parse-bibliography))
-               ;;(entries (helm-bibtex-resolve-crossrefs entries))
-               (entries (helm-bibtex-prepare-entries entries))
-               ;;(entries (sort entries 'helm-bibtex-cmp-by-year))
-               ;;(entries (nreverse entries)))
-              )
+               (entries (helm-bibtex-prepare-entries entries)))
           (setq helm-bibtex-cached-candidates
                 (--map (cons (helm-bibtex-clean-string
                               (s-join " " (-map #'cdr it))) it)
@@ -376,26 +372,6 @@ is the entry (only the fields listed above) as an alist."
 (defun helm-bibtex-cmp-by-year (e1 e2)
   (if (not (string< (helm-bibtex-get-value "year" e1) (helm-bibtex-get-value "year" e2))) t nil))
 
-(defun helm-bibtex-resolve-crossrefs (entries)
-  "Expand all entries with fields from cross-references entries."
-   (cl-loop
-    with entry-hash =
-      (cl-loop
-       with ht = (make-hash-table :test #'equal :size (length entries))
-       for entry in entries
-       for key = (helm-bibtex-get-value "=key=" entry)
-       ;; Other types than proceedings and books can be
-       ;; cross-referenced, but I suppose that isn't really used:
-       if (member (downcase (helm-bibtex-get-value "=type=" entry))
-                  '("proceedings" "book"))
-       do (puthash (downcase key) entry ht)
-       finally return ht)
-    for entry in entries
-    for crossref = (helm-bibtex-get-value "crossref" entry)
-    if crossref
-      collect (append entry (gethash (downcase crossref) entry-hash))
-    else
-      collect entry))
 
 (defun helm-bibtex-parse-bibliography ()
   "Parse the BibTeX entries listed in the current buffer and
@@ -565,27 +541,35 @@ find a PDF file."
       (window-body-width)
     (1- (window-body-width))))
 
-(defun helm-bibtex-candidates-formatter (candidates source)
+(defun helm-bibtex-candidate-formatter (candidates source)
   "Formats BibTeX entries for display in results list."
-  (cl-loop
-   with width = (with-helm-window (helm-bibtex-window-width))
-   for entry in candidates
-   for entry = (cdr entry)
-   for entry-key = (helm-bibtex-get-value "=key=" entry)
-   if (assoc-string "author" entry 'case-fold)
+  (let* ((sorted-candidates
+          (if helm-bibtex-sort-fun
+              (progn
+                (print "sorting...")
+                (print candidates)
+                (sort candidates helm-bibtex-sort-fun))
+            candidates)))
+    (cl-loop
+     with width = (with-helm-window (helm-bibtex-window-width))
+     for entry in sorted-candidates
+     for entry = (cdr entry)
+     for entry-key = (helm-bibtex-get-value "=key=" entry)
+     if (assoc-string "author" entry 'case-fold)
      for fields = '("author" "title" "year" "=has-pdf=" "=has-note=" "=comment=" "=venue=")
-   else
+     else
      for fields = '("editor" "title" "year" "=has-pdf=" "=has-note=" "=comment=" "=venue=")
-   for fields = (-map (lambda (it)
-                        (helm-bibtex-clean-string
-                          (helm-bibtex-get-value it entry " ")))
-                      fields)
-   for fields = (-update-at 0 'helm-bibtex-shorten-authors fields)
-   collect
-   (cons (s-format "$0  $1 $2 $3$4$5 $6" 'elt
-                   (-zip-with (lambda (f w) (truncate-string-to-width f w 0 ?\s))
-                              fields (list 14 (- width 40) 4 1 1 1 14)))
-         entry-key)))
+     for fields = (-map (lambda (it)
+                          (helm-bibtex-clean-string
+                           (helm-bibtex-get-value it entry " ")))
+                        fields)
+     for fields = (-update-at 0 'helm-bibtex-shorten-authors fields)
+     collect
+     (cons (s-format "$0  $1 $2 $3$4$5 $6" 'elt
+                     (-zip-with (lambda (f w)
+                                  (truncate-string-to-width f w 0 ?\s))
+                                fields (list 14 (- width 40) 4 1 1 1 14)))
+           entry-key))))
 
 
 (defun helm-bibtex-clean-string (s)
@@ -1066,12 +1050,30 @@ entry for each BibTeX file that will open that file for editing."
              bib-files)
       helm-bibtex-fallback-options)))
 
+(defvar helm-bibtex-sort-fun nil)
+
+(defun helm-bibtex-sort ()
+  (interactive)
+	(setq helm-bibtex-sort-fun (lambda (e1 e2)
+	  (string< (helm-bibtex-get-value "year" e2)
+			   (helm-bibtex-get-value "year" e1))))
+    (helm-refresh)
+    (setq helm-bibtex-sort-fun nil))
+
+(defvar helm-bibtex-map
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map helm-map)
+    (define-key map (kbd "M-<down>") 'helm-bibtex-sort)
+    map)
+  "keymap for a helm source.")
+
 
 (defvar helm-source-bibtex
   (helm-build-sync-source "BibTeX entries"
     :init #'helm-bibtex-init
+	:keymap helm-bibtex-map
     :candidates #'helm-bibtex-candidates
-    :filtered-candidate-transformer #'helm-bibtex-candidates-formatter
+    :filtered-candidate-transformer #'helm-bibtex-candidate-formatter
     :action (helm-make-actions
 		"Open PDF in Emacs"   'helm-bibtex-open-pdf
         "Open PDF in Zathura" 'helm-bibtex-open-pdf-zathura
