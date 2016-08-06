@@ -5,7 +5,8 @@
 ;; Author: Titus von der Malsburg <malsburg@posteo.de>
 ;; Maintainer: Titus von der Malsburg <malsburg@posteo.de>
 ;; Version: 1.0.0
-;; Package-Version: 20160801.1146
+;; Package-Version: 20160805.2008
+;; Package-X-Original-Version: 20160801.1146
 ;; Package-X-Original-Version: 20160723.2342
 ;; Package-X-Original-Version: 20160716.946
 ;; Package-X-Original-Version: 20160711.855
@@ -1059,7 +1060,8 @@ entry for each BibTeX file that will open that file for editing."
         "Copy Bibtex entry"   'helm-bibtex-copy-bibtex
         "Send PDF to Dropbox" 'helm-bibtex-send-pdf-dropbox
         "Edit notes"          'helm-bibtex-edit-notes
-        "Show entry"          'helm-bibtex-show-entry))
+        "Show entry"          'helm-bibtex-show-entry)
+    :fuzzy-match)
 "Source for searching in BibTeX files.")
 
 (defvar helm-source-fallback-options
