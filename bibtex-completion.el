@@ -314,7 +314,6 @@ before being saved."
         (let* ((entries (bibtex-completion-parse-bibliography))
                (entries (bibtex-completion-resolve-crossrefs entries))
                (entries (bibtex-completion-prepare-entries entries))
-               (entries (nreverse entries))
                (entries
                 (--map (cons (bibtex-completion-clean-string
                                   (s-join " " (-map #'cdr it))) it)
@@ -464,12 +463,25 @@ fields. If FIELDS is empty, all fields are kept. Also add a
 DO-NOT-FIND-PDF is non-nil, this function does not attempt to
 find a PDF file."
   (when entry ; entry may be nil, in which case just return nil
-    (let* ((fields (when fields (append fields (list "=type=" "=key=" "=has-pdf=" "=has-note="))))
+    (let* ((fields (when fields (append fields (list "=venue=" "=comment=" "=type=" "=key=" "=has-pdf=" "=has-note="))))
            ; Check for PDF:
            (entry (if (and (not do-not-find-pdf) (bibtex-completion-find-pdf entry))
                       (cons (cons "=has-pdf=" bibtex-completion-pdf-symbol) entry)
                     entry))
            (entry-key (cdr (assoc "=key=" entry)))
+           ;; venue
+           (entry (let* ((booktitle (bibtex-completion-get-value "booktitle" entry ""))
+                         (journal (bibtex-completion-get-value "journal" entry "")))
+                    ;; if `booktitle' or `journal' field is not empty
+                    (if (not (and (string= "" booktitle) (string= "" journal)))
+                        (cons (cons "=venue=" (concat booktitle journal)) entry)
+                      entry)))
+           ;; comment
+           (entry (let* ((comment (bibtex-completion-get-value "comment" entry "")))
+                    ;; if `comment' field is not empty
+                    (if (not (string= "" comment))
+                      (cons (cons "=comment=" (substring comment 0 1)) entry)
+                      entry)))
            ; Check for notes:
            (entry (if (or
                        ;; One note file per entry:
@@ -566,7 +578,7 @@ matching PDFs for an entry, the first is opened."
       (-each it (lambda(fpath) (call-process "zathura" nil 0 nil fpath)))
     (message "No PDF(s) found.")))
 
-(defun bibtex-completion-open-pdf-okular (_)
+(defun bibtex-completion-open-pdf-okular (candidates)
   "Open the PDFs associated with the marked entries in Okular.  All paths
 in `helm-bibtex-library-path' are searched.  If there are several
 matching PDFs for an entry, the first is opened."
@@ -850,7 +862,7 @@ defined.  Surrounding curly braces are stripped."
       (-each it 'mml-attach-file)
     (message "No PDF(s) found.")))
 
-(defun helm-bibtex-send-pdf-dropbox (candidates)
+(defun bibtex-completion-send-pdf-dropbox (candidates)
   "Attach the PDFs of the selected entries where available."
   (--if-let
       (-flatten
