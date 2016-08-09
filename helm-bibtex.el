@@ -563,7 +563,7 @@ find a PDF file."
      (cons (s-format "$0  $1 $2 $3$4$5 $6" 'elt
                      (-zip-with (lambda (f w)
                                   (truncate-string-to-width f w 0 ?\s))
-                                fields (list 12 (- width 36) 4 1 1 1 12)))
+                                fields (list 14 (- width 36) 4 1 1 1 10)))
            entry-key)))
 
 
