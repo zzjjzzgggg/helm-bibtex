@@ -94,8 +94,7 @@
 ;; yourself with Helm.  It's more powerful that you might think.
 
 
-;;;###autoload
-(require 'helm)
+;;(require 'helm)
 (require 'helm-net)
 (require 'helm-easymenu)
 (require 'parsebib)
