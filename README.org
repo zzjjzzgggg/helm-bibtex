@@ -1,5 +1,6 @@
-#+TITLE: Helm-bibtex – A Bibliography Manager for Emacs
+#+TITLE: Bibtex-completion, helm-bibtex, ivy-bibtex
 #+Options: num:nil
 
 Forked from: 
 [[https://github.com/tmalsburg/helm-bibtex][Helm-bibtex Readme]]
+
