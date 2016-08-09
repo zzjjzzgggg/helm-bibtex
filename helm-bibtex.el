@@ -5,7 +5,8 @@
 ;; Author: Titus von der Malsburg <malsburg@posteo.de>
 ;; Maintainer: Titus von der Malsburg <malsburg@posteo.de>
 ;; Version: 1.0.0
-;; Package-Version: 20160805.2008
+;; Package-Version: 20160809.1648
+;; Package-X-Original-Version: 20160805.2008
 ;; Package-X-Original-Version: 20160801.1146
 ;; Package-X-Original-Version: 20160723.2342
 ;; Package-X-Original-Version: 20160716.946
@@ -96,7 +97,6 @@
 
 (require 'helm)
 (require 'helm-net)
-(require 'helm-plugin)
 (require 'helm-easymenu)
 (require 'parsebib)
 (require 'cl-lib)
@@ -104,11 +104,6 @@
 (require 's)
 (require 'f)
 
-
-(unless (featurep 'helm-config)
-    (warn "Helm is not properly configured.  Please see
-	    Helm's documentation for details on how to do this:
-		    https://github.com/emacs-helm/helm#install-from-emacs-packaging-system"))
 
 (defgroup helm-bibtex nil
   "Helm plugin for searching entries in a BibTeX bibliography."
