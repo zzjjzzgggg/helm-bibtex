@@ -104,8 +104,6 @@
 (require 'dash)
 (require 's)
 (require 'f)
-(require 'biblio)
-
 
 (defgroup helm-bibtex nil
   "Helm plugin for searching entries in a BibTeX bibliography."
