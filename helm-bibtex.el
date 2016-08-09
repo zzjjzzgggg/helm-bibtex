@@ -98,11 +98,13 @@
 (require 'helm)
 (require 'helm-net)
 (require 'helm-easymenu)
+(require 'browse-url)
 (require 'parsebib)
 (require 'cl-lib)
 (require 'dash)
 (require 's)
 (require 'f)
+(require 'biblio)
 
 
 (defgroup helm-bibtex nil
