@@ -1,23 +1,9 @@
 ;;; helm-bibtex.el --- A BibTeX bibliography manager based on Helm
 
-;; Copyright 2014 Titus von der Malsburg <malsburg@posteo.de>
-
 ;; Author: Titus von der Malsburg <malsburg@posteo.de>
 ;; Maintainer: Titus von der Malsburg <malsburg@posteo.de>
-;; Version: 1.0.0
-;; Package-Version: 20160809.1648
-;; Package-X-Original-Version: 20160805.2008
-;; Package-X-Original-Version: 20160801.1146
-;; Package-X-Original-Version: 20160723.2342
-;; Package-X-Original-Version: 20160716.946
-;; Package-X-Original-Version: 20160711.855
-;; Package-X-Original-Version: 20160606.1514
-;; Package-X-Original-Version: 20160325.1526
-;; Package-X-Original-Version: 20160323.2235
-;; Package-X-Original-Version: 20160321.1728
-;; Package-X-Original-Version: 20160314.1613
-;; Package-X-Original-Version: 20160310.1300
-;; Package-Requires: ((helm "1.5.5") (parsebib "1.0") (s "1.9.0") (dash "2.6.0") (f "0.16.2") (cl-lib "0.5"))
+;; Version: 2.0.0
+;; Package-Requires: ((helm "1.5.5") (parsebib "1.0") (s "1.9.0") (dash "2.6.0") (f "0.16.2") (cl-lib "0.5") (biblio "0.2"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -34,9 +20,18 @@
 
 ;;; Commentary:
 
-;; A BibTeX bibliography manager based on Helm.
+;; A BibTeX bibliography manager based on Helm and the
+;; helm-bibtex backend
 ;;
 ;; News:
+;; - 04/18/2016: Improved support for Mendely/Jabref/Zotero way of
+;;   referencing PDFs.
+;; - 04/06/2016: Generic functions are factored out into a backend for
+;;   use with other completion frameworks like ivy.
+;; - 04/02/2016: Added support for biblio.el which is useful for
+;;   importing BibTeX from CrossRef and other sources.  See new
+;;   fallback options and the section "Importing BibTeX from CrossRef"
+;;   on the GitHub page.
 ;; - 02/25/2016: Support for pre- and postnotes for pandoc-citeproc
 ;;   citations.
 ;; - 11/23/2015: Added support for keeping all notes in one
@@ -59,6 +54,7 @@
 ;; - Attach notes to publications
 ;; - Quick access to online bibliographic databases such as Pubmed,
 ;;   arXiv, Google Scholar, Library of Congress, etc.
+;; - Import BibTeX entries from CrossRef and other sources.
 ;;
 ;; See the github page for details:
 ;;
@@ -82,7 +78,8 @@
 ;; https://github.com/emacs-helm/helm#install-from-emacs-packaging-system).
 ;;
 ;; Let helm-bibtex know where it can find your bibliography by setting
-;; the variable `helm-bibtex-bibliography'.  See the manual for more details:
+;; the variable `helm-bibtex-bibliography'.  See the manual for
+;; more details:
 ;;
 ;;   https://github.com/tmalsburg/helm-bibtex#minimal-configuration
 
@@ -94,6 +91,7 @@
 ;; for searching in online databases.  Apart from that, familiarize
 ;; yourself with Helm.  It's more powerful that you might think.
 
+;;; Code:
 
 (require 'helm)
 (require 'helm-net)
@@ -104,10 +102,11 @@
 (require 'dash)
 (require 's)
 (require 'f)
+(require 'biblio)
 
 (defgroup helm-bibtex nil
   "Helm plugin for searching entries in a BibTeX bibliography."
-  :group 'helm)
+  :group 'completion)
 
 (defcustom helm-bibtex-bibliography nil
   "The BibTeX file or list of BibTeX files."
@@ -115,9 +114,14 @@
   :type '(choice file (repeat file)))
 
 (defcustom helm-bibtex-library-path nil
-  "A directory or list of directories in which PDFs are
-stored.  Helm-bibtex assumes that the names of these PDFs are
+  "A directory or list of directories in which PDFs are stored.
+Bibtex-completion assumes that the names of these PDFs are
 composed of the BibTeX-key plus a \".pdf\" suffix."
+  :group 'helm-bibtex
+  :type '(choice directory (repeat directory)))
+
+(defcustom helm-bibtex-dropbox-path "~/Dropbox"
+  "Symbol used to indicate the Dropbox directory."
   :group 'helm-bibtex
   :type '(choice directory (repeat directory)))
 
@@ -134,11 +138,6 @@ systems default viewer for PDFs is used."
 (defcustom helm-bibtex-pdf-symbol "#"
   "Symbol used to indicate that a PDF file is available for a
 publication.  This should be a single character."
-  :group 'helm-bibtex
-  :type 'string)
-
-(defcustom helm-bibtex-dropbox-path "~/Dropbox"
-  "Symbol used to indicate the Dropbox directory."
   :group 'helm-bibtex
   :type 'string)
 
@@ -169,7 +168,7 @@ suffix that is specified in `helm-bibtex-notes-extension'."
   :type '(choice file directory))
 
 (defcustom helm-bibtex-notes-template-multiple-files
-  "#+TITLE: Notes on: ${title} (${year})\n\n"
+  "#+TITLE: Notes on: ${author} (${year}): ${title}\n\n"
   "Template used to create a new note when each note is stored in
 a separate file.  '${field-name}' can be used to insert the value
 of a BibTeX field into the template."
@@ -177,7 +176,7 @@ of a BibTeX field into the template."
   :type 'string)
 
 (defcustom helm-bibtex-notes-template-one-file
-  "\n* ${title} (${year})\n  :PROPERTIES:\n  :Custom_ID: ${=key=}\n  :END:\n\n"
+  "\n* ${author} (${year}): ${title}\n  :PROPERTIES:\n  :Custom_ID: ${=key=}\n  :END:\n\n"
   "Template used to create a new note when all notes are stored
 in one file.  '${field-name}' can be used to insert the value of
 a BibTeX field into the template."
@@ -198,7 +197,6 @@ used when `helm-bibtex-notes-path' is a directory (not a file)."
   :group 'helm-bibtex
   :type 'string)
 
-;(defcustom helm-bibtex-notes-symbol "✎"
 (defcustom helm-bibtex-notes-symbol "+"
   "Symbol used to indicate that a publication has notes.  This
 should be a single character."
@@ -206,8 +204,30 @@ should be a single character."
   :type 'string)
 
 (defcustom helm-bibtex-fallback-options
-  '(("Google Scholar" . "https://scholar.google.co.uk/scholar?q=%s")
-    ("arXiv" . helm-bibtex-arxiv))
+  '(("CrossRef                                  (biblio.el)"
+     . (lambda () (biblio-lookup #'biblio-crossref-backend helm-pattern)))
+    ("arXiv                                     (biblio.el)"
+     . (lambda () (biblio-lookup #'biblio-arxiv-backend helm-pattern)))
+    ("DBLP (computer science bibliography)      (biblio.el)"
+     . (lambda () (biblio--lookup-1 #'biblio-dblp-backend helm-pattern)))
+    ("HAL (French open archive)                 (biblio.el)"
+     . (lambda () (biblio--lookup-1 #'biblio-hal-backend helm-pattern)))
+    ("Google Scholar                            (web)"
+     . "https://scholar.google.co.uk/scholar?q=%s")
+    ("Pubmed                                    (web)"
+     . "https://www.ncbi.nlm.nih.gov/pubmed/?term=%s")
+    ("Bodleian Library                          (web)"
+     . "http://solo.bodleian.ox.ac.uk/primo_library/libweb/action/search.do?vl(freeText0)=%s&fn=search&tab=all")
+    ("Library of Congress                       (web)"
+     . "https://www.loc.gov/search/?q=%s&all=true&st=list")
+    ("Deutsche Nationalbibliothek               (web)"
+     . "https://portal.dnb.de/opac.htm?query=%s")
+    ("British National Library                  (web)"
+     . "http://explore.bl.uk/primo_library/libweb/action/search.do?&vl(freeText0)=%s&fn=search")
+    ("Bibliothèque nationale de France          (web)"
+     . "http://catalogue.bnf.fr/servlet/RechercheEquation?host=catalogue?historique1=Recherche+par+mots+de+la+notice&niveau1=1&url1=/jsp/recherchemots_simple.jsp?host=catalogue&maxNiveau=1&categorieRecherche=RechercheMotsSimple&NomPageJSP=/jsp/recherchemots_simple.jsp?host=catalogue&RechercheMotsSimpleAsauvegarder=0&ecranRechercheMot=/jsp/recherchemots_simple.jsp&resultatsParPage=20&x=40&y=22&nbElementsHDJ=6&nbElementsRDJ=7&nbElementsRCL=12&FondsNumerise=M&CollectionHautdejardin=TVXZROM&HDJ_DAV=R&HDJ_D2=V&HDJ_D1=T&HDJ_D3=X&HDJ_D4=Z&HDJ_SRB=O&CollectionRezdejardin=UWY1SPQM&RDJ_DAV=S&RDJ_D2=W&RDJ_D1=U&RDJ_D3=Y&RDJ_D4=1&RDJ_SRB=P&RDJ_RLR=Q&RICHELIEU_AUTRE=ABCDEEGIKLJ&RCL_D1=A&RCL_D2=K&RCL_D3=D&RCL_D4=E&RCL_D5=E&RCL_D6=C&RCL_D7=B&RCL_D8=J&RCL_D9=G&RCL_D10=I&RCL_D11=L&ARSENAL=H&LivrePeriodique=IP&partitions=C&images_fixes=F&son=S&images_animees=N&Disquette_cederoms=E&multimedia=M&cartes_plans=D&manuscrits=BT&monnaies_medailles_objets=JO&salle_spectacle=V&Monographie_TN=M&Periodique_TN=S&Recueil_TN=R&CollectionEditorial_TN=C&Ensemble_TN=E&Spectacle_TN=A&NoticeB=%s")
+    ("Gallica Bibliothèque Numérique            (web)"
+     . "http://gallica.bnf.fr/Search?q=%s"))
   "Alist of online sources that can be used to search for
 publications.  The key of each entry is the name of the online
 source.  The value is the URL used for retrieving results.  This
@@ -319,14 +339,6 @@ the directories listed in `helm-bibtex-library-path'."
   :group 'helm-bibtex
   :type 'string)
 
-(defcustom helm-bibtex-full-frame t
-  "Non-nil means open `helm-bibtex' using the entire window. When
-nil, the window will split below."
-  :group 'helm-bibtex
-  :type 'boolean)
-
-(easy-menu-add-item nil '("Tools" "Helm" "Tools") ["BibTeX" helm-bibtex t])
-
 (defvar helm-bibtex-bibliography-hash nil
   "The hash of the content of the configured bibliography
 files.  If this hash has not changed since the bibliography was
@@ -346,13 +358,15 @@ actually exist."
                   (user-error "BibTeX file %s could not be found." file)))
         (-flatten (list helm-bibtex-bibliography))))
 
-
-(defun helm-bibtex-candidates ()
+(defun helm-bibtex-candidates (&optional formatter)
   "Reads the BibTeX files and returns a list of conses, one for
 each entry.  The first element of these conses is a string
 containing authors, editors, title, year, type, and key of the
 entry.  This is string is used for matching.  The second element
-is the entry (only the fields listed above) as an alist."
+is the entry (only the fields listed above) as an alist.
+
+If non-nil, the entries are passed to the function FORMATTER
+before being saved."
   ;; Open configured bibliographies in temporary buffer:
   (with-temp-buffer
     (mapc #'insert-file-contents
@@ -363,17 +377,39 @@ is the entry (only the fields listed above) as an alist."
                    (string= helm-bibtex-bibliography-hash bibliography-hash))
         (message "Loading bibliography ...")
         (let* ((entries (helm-bibtex-parse-bibliography))
-               (entries (helm-bibtex-prepare-entries entries)))
-          (setq helm-bibtex-cached-candidates
+               (entries (helm-bibtex-resolve-crossrefs entries))
+               (entries (helm-bibtex-prepare-entries entries))
+               (entries
                 (--map (cons (helm-bibtex-clean-string
-                              (s-join " " (-map #'cdr it))) it)
-                       entries)))
+                                  (s-join " " (-map #'cdr it))) it)
+                           entries)))
+          (setq helm-bibtex-cached-candidates
+                (if (functionp formatter)
+                    (funcall formatter entries)
+                  entries)))
         (setq helm-bibtex-bibliography-hash bibliography-hash))
       helm-bibtex-cached-candidates)))
 
-(defun helm-bibtex-cmp-by-year (e1 e2)
-  (if (not (string< (helm-bibtex-get-value "year" e1) (helm-bibtex-get-value "year" e2))) t nil))
-
+(defun helm-bibtex-resolve-crossrefs (entries)
+  "Expand all entries with fields from cross-references entries."
+   (cl-loop
+    with entry-hash =
+      (cl-loop
+       with ht = (make-hash-table :test #'equal :size (length entries))
+       for entry in entries
+       for key = (helm-bibtex-get-value "=key=" entry)
+       ;; Other types than proceedings and books can be
+       ;; cross-referenced, but I suppose that isn't really used:
+       if (member (downcase (helm-bibtex-get-value "=type=" entry))
+                  '("proceedings" "book"))
+       do (puthash (downcase key) entry ht)
+       finally return ht)
+    for entry in entries
+    for crossref = (helm-bibtex-get-value "crossref" entry)
+    if crossref
+      collect (append entry (gethash (downcase crossref) entry-hash))
+    else
+      collect entry))
 
 (defun helm-bibtex-parse-bibliography ()
   "Parse the BibTeX entries listed in the current buffer and
@@ -384,7 +420,8 @@ appeared in the BibTeX files."
    for entry-type = (parsebib-find-next-item)
    while entry-type
    unless (member-ignore-case entry-type '("preamble" "string" "comment"))
-   collect (-map (lambda (it) (cons (downcase (car it)) (cdr it)))
+   collect (-map (lambda (it)
+                   (cons (downcase (car it)) (cdr it)))
                  (parsebib-read-entry entry-type))))
 
 (defun helm-bibtex-get-entry (entry-key)
@@ -413,7 +450,7 @@ appended to the requested entry."
 (defun helm-bibtex-prepare-entries (entries)
   "Do some preprocessing of the entries."
   (cl-loop
-   with fields = (append '("title" "year" "keywords" "booktitle" "journal" "groups" "comment")
+   with fields = (append '("title" "year" "crossref")
                          (-map (lambda (it) (if (symbolp it) (symbol-name it) it))
                                helm-bibtex-additional-search-fields))
    for entry in entries
@@ -432,28 +469,40 @@ file is specified, or if the specified file does not exist, or if
            (value (helm-bibtex-get-value helm-bibtex-pdf-field entry)))
       (cond
        ((not value) nil)         ; Field not defined.
-       ((f-file? value) value)   ; A bare path was found.
-       (t
-        ; Assuming Zotero/Mendeley/JabRef format:
-        (cl-loop  ; Looping over the files:
-         for record in (s-split ";" value)
-         for record = (s-split ":" record)
-         for file-name = (nth 0 record)
-         for path = (or (nth 1 record) "")
-         ; f-full prepends missing slashes, so we don't need a special
-         ; case for Mendeley which omits the beginning slash.
-         if (f-file? (f-full path)) collect (f-full path)
-         else if (f-file? (f-full (f-join path file-name)))
-         collect (f-full (f-join path file-name))
-         else if (f-file? (f-full (f-join helm-bibtex-library-path path)))
-         collect (f-full (f-join helm-bibtex-library-path path))
-         ))))))
+       ((f-file? value) value)   ; A bare full path was found.
+       (t                        ; Zotero/Mendeley/JabRef format:
+        (let ((value (replace-regexp-in-string "\\([^\\]\\);" "\\1\^^" value)))
+          (cl-loop  ; Looping over the files:
+           for record in (s-split "\^^" value)
+           ; Replace unescaped colons by field separator:
+           for record = (replace-regexp-in-string "\\([^\\]\\|^\\):" "\\1\^_" record)
+           ; Unescape stuff:
+           for record = (replace-regexp-in-string "\\\\\\(.\\)" "\\1" record)
+           ; Now we can safely split:
+           for record = (s-split "\^_" record)
+           for file-name = (nth 0 record)
+           for path = (or (nth 1 record) "")
+           for paths = (if (s-match "^[A-Z]:" path)
+                           (list path)                 ; Absolute Windows path
+                                                       ; Something else:
+                         (append
+                          (list
+                           path
+                           (f-join (f-root) path) ; Mendeley #105
+                           (f-join (f-root) path file-name)) ; Mendeley #105
+                          (--map (f-join it path)
+                                 (-flatten helm-bibtex-library-path)) ; Jabref #100
+                          (--map (f-join it path file-name)
+                                 (-flatten helm-bibtex-library-path)))) ; Jabref #100
+           for result = (-first 'f-exists? paths)
+           if result collect result)))))))
 
 (defun helm-bibtex-find-pdf-in-library (key-or-entry)
   "Searches the directories in `helm-bibtex-library-path' for a
 PDF whose names is composed of the BibTeX key plus \".pdf\".  The
 path of the first matching PDF is returned."
-  (let* ((key (if (stringp key-or-entry) key-or-entry
+  (let* ((key (if (stringp key-or-entry)
+                  key-or-entry
                 (helm-bibtex-get-value "=key=" key-or-entry)))
          (path (-first 'f-file?
                        (--map (f-join it (s-concat key ".pdf"))
@@ -479,15 +528,11 @@ fields. If FIELDS is empty, all fields are kept. Also add a
 DO-NOT-FIND-PDF is non-nil, this function does not attempt to
 find a PDF file."
   (when entry ; entry may be nil, in which case just return nil
-    (let* ((fields
-            (when fields
-              (append fields
-                      (list "=venue=" "=comment=" "=type=" "=key=" "=has-pdf=" "=has-note="))))
+    (let* ((fields (when fields (append fields (list "=venue=" "=comment=" "=type=" "=key=" "=has-pdf=" "=has-note="))))
            ; Check for PDF:
            (entry (if (and (not do-not-find-pdf) (helm-bibtex-find-pdf entry))
                       (cons (cons "=has-pdf=" helm-bibtex-pdf-symbol) entry)
                     entry))
-           ;; entry key
            (entry-key (cdr (assoc "=key=" entry)))
            ;; venue
            (entry (let* ((booktitle (helm-bibtex-get-value "booktitle" entry ""))
@@ -529,44 +574,31 @@ find a PDF file."
                             :test (lambda (x y) (string= (s-downcase x) (s-downcase y)))
                             :key 'car :from-end t))))
 
+
 
-;; The function `window-width' does not necessarily report the correct
-;; number of characters that fit on a line.  This is a
-;; work-around.  See also this bug report:
-;; http://debbugs.gnu.org/cgi/bugreport.cgi?bug=19395
-(defun helm-bibtex-window-width ()
-  (if (and (not (featurep 'xemacs))
-           (display-graphic-p)
-           overflow-newline-into-fringe
-           (/= (frame-parameter nil 'left-fringe) 0)
-           (/= (frame-parameter nil 'right-fringe) 0))
-      (window-body-width)
-    (1- (window-body-width))))
-
-(defun helm-bibtex-candidate-formatter (candidates source)
+(defun helm-bibtex-candidates-formatter-default (candidates width)
   "Formats BibTeX entries for display in results list."
-    (cl-loop
-     with width = (with-helm-window (helm-bibtex-window-width))
-     for entry in candidates
-     for entry = (cdr entry)
-     for entry-key = (helm-bibtex-get-value "=key=" entry)
-     if (assoc-string "author" entry 'case-fold)
-     for fields = '("author" "title" "year" "=has-pdf=" "=has-note=" "=comment=" "=venue=")
-     else
-     for fields = '("editor" "title" "year" "=has-pdf=" "=has-note=" "=comment=" "=venue=")
-     for fields = (-map (lambda (it)
-                          (helm-bibtex-clean-string
-                           (helm-bibtex-get-value it entry " ")))
-                        fields)
-     for fields = (-update-at 0 'helm-bibtex-shorten-authors fields)
-     collect
-     (cons (s-format "$0  $1 $2 $3$4$5 $6" 'elt
-                     (-zip-with (lambda (f w)
-                                  (truncate-string-to-width f w 0 ?\s))
-                                fields (list 14 (- width 36) 4 1 1 1 10)))
-           entry-key)))
+  (cl-loop
+   for entry in candidates
+   for entry = (cdr entry)
+   for entry-key = (helm-bibtex-get-value "=key=" entry)
+   if (assoc-string "author" entry 'case-fold)
+   for fields = '("author" "title" "year" "=has-pdf=" "=has-note=" "=comment=" "=venue=")
+   else
+   for fields = '("editor" "title" "year" "=has-pdf=" "=has-note=" "=comment=" "=venue=")
+   for fields = (-map (lambda (it)
+                        (helm-bibtex-clean-string
+                          (helm-bibtex-get-value it entry " ")))
+                      fields)
+   for fields = (-update-at 0 'helm-bibtex-shorten-authors fields)
+   collect
+   (cons (s-format "$0  $1 $2 $3$4$5 $6" 'elt
+                   (-zip-with (lambda (f w)
+                                (truncate-string-to-width f w 0 ?\s))
+                              fields (list 14 (- width 36) 4 1 1 1 10)))
+         entry-key)))
 
-
+
 (defun helm-bibtex-clean-string (s)
   "Removes quoting and superfluous white space from BibTeX field
 values."
@@ -587,45 +619,44 @@ values."
                concat (car p))
     nil))
 
-(defun helm-bibtex-open-pdf (_)
+
+(defun helm-bibtex-open-pdf (candidates)
   "Open the PDFs associated with the marked entries using the
 function specified in `helm-bibtex-pdf-open-function'.  All paths
 in `helm-bibtex-library-path' are searched.  If there are several
 matching PDFs for an entry, the first is opened."
   (--if-let
       (-flatten
-       (-map 'helm-bibtex-find-pdf (helm-marked-candidates :with-wildcard t)))
+       (-map 'helm-bibtex-find-pdf
+             (if (listp candidates) candidates (list candidates))))
       (-each it helm-bibtex-pdf-open-function)
     (message "No PDF(s) found.")))
 
-(defun helm-bibtex-open-pdf-zathura(_)
+(defun helm-bibtex-open-pdf-zathura(candidates)
   "Open the PDFs associated with the marked entries in Zathura.  All paths
 in `helm-bibtex-library-path' are searched.  If there are several
 matching PDFs for an entry, the first is opened."
   (--if-let
       (-flatten
-       (-map 'helm-bibtex-find-pdf (helm-marked-candidates :with-wildcard t)))
-      (-each it (lambda(fpath)
-				  (call-process "zathura" nil 0 nil fpath)))
+       (-map 'helm-bibtex-find-pdf
+             (if (listp candidates) candidates (list candidates))))
+      (-each it (lambda(fpath) (call-process "zathura" nil 0 nil fpath)))
     (message "No PDF(s) found.")))
 
-
-
-(defun helm-bibtex-open-pdf-okular (_)
+(defun helm-bibtex-open-pdf-okular (candidates)
   "Open the PDFs associated with the marked entries in Okular.  All paths
 in `helm-bibtex-library-path' are searched.  If there are several
 matching PDFs for an entry, the first is opened."
   (--if-let
       (-flatten
-       (-map 'helm-bibtex-find-pdf (helm-marked-candidates :with-wildcard t)))
-      (-each it (lambda(fpath)
-				  (call-process "okular" nil 0 nil fpath)))
+       (-map 'helm-bibtex-find-pdf
+             (if (listp candidates) candidates (list candidates))))
+      (-each it (lambda(fpath) (call-process "okular" nil 0 nil fpath)))
     (message "No PDF(s) found.")))
 
-
-(defun helm-bibtex-open-url-or-doi (_)
+(defun helm-bibtex-open-url-or-doi (candidates)
   "Open the associated URL or DOI in a browser."
-  (let ((keys (helm-marked-candidates :with-wildcard t)))
+  (let ((keys (if (listp candidates) candidates (list candidates))))
     (dolist (key keys)
       (let* ((entry (helm-bibtex-get-entry key))
              (url (helm-bibtex-get-value "url" entry))
@@ -633,8 +664,8 @@ matching PDFs for an entry, the first is opened."
              (browse-url-browser-function
               (or helm-bibtex-browser-function
                   browse-url-browser-function)))
-        (if url (helm-browse-url url)
-          (if doi (helm-browse-url
+        (if url (browse-url url)
+          (if doi (browse-url
                    (s-concat "http://dx.doi.org/" doi)))
           (message "No URL or DOI found for this entry: %s"
                    key))))))
@@ -686,26 +717,24 @@ omitted."
                 for pdfs = (helm-bibtex-find-pdf key)
                 append (--map (format "[[%s][%s]]" it key) pdfs))))
 
-(defun helm-bibtex-insert-citation (_)
+(defun helm-bibtex-insert-citation (candidates)
   "Insert citation at point.  The format depends on
 `helm-bibtex-format-citation-functions'."
-  (let ((keys (helm-marked-candidates :with-wildcard t))
+  (let ((keys (if (listp candidates) candidates (list candidates)))
         (format-function
          (cdr (or (assoc major-mode helm-bibtex-format-citation-functions)
                   (assoc 'default   helm-bibtex-format-citation-functions)))))
-    (with-helm-current-buffer
-      (insert
-       (funcall format-function keys)))))
+    (insert
+     (funcall format-function keys))))
 
-(defun helm-bibtex-insert-reference (_)
+(defun helm-bibtex-insert-reference (candidates)
   "Insert a reference for each selected entry."
-  (let* ((keys (helm-marked-candidates :with-wildcard t))
+  (let* ((keys (if (listp candidates) candidates (list candidates)))
          (refs (--map
                 (s-word-wrap fill-column
                              (concat "\n- " (helm-bibtex-apa-format-reference it)))
                 keys)))
-    (with-helm-current-buffer
-      (insert "\n" (s-join "\n" refs) "\n"))))
+    (insert "\n" (s-join "\n" refs) "\n")))
 
 (defun helm-bibtex-apa-format-reference (key)
   "Returns a plain text reference in APA format for the
@@ -855,23 +884,21 @@ defined.  Surrounding curly braces are stripped."
           value))
       default)))
 
-(defun helm-bibtex-insert-key (_)
+(defun helm-bibtex-insert-key (candidates)
   "Insert BibTeX key at point."
-  (let ((keys (helm-marked-candidates :with-wildcard t)))
-    (with-helm-current-buffer
-      (insert
-        (funcall 'helm-bibtex-format-citation-default keys)))))
+  (let ((keys (if (listp candidates) candidates (list candidates))))
+    (insert
+     (funcall 'helm-bibtex-format-citation-default keys))))
 
-(defun helm-bibtex-insert-bibtex (_)
-  "Insert BibTeX entry at point."
-  (let ((keys (helm-marked-candidates :with-wildcard t)))
-    (with-helm-current-buffer
-      (insert (s-join "\n" (--map (helm-bibtex-make-bibtex it) keys))))))
+(defun helm-bibtex-insert-bibtex (candidates)
+  "Insert BibTeX key at point."
+  (let ((keys (if (listp candidates) candidates (list candidates))))
+    (insert (s-join "\n" (--map (helm-bibtex-make-bibtex it) keys)))))
 
-(defun helm-bibtex-copy-bibtex (_)
+(defun helm-bibtex-copy-bibtex (candidates)
   "copy BibTeX entry."
-  (let ((keys (helm-marked-candidates :with-wildcard t)))
-      (kill-new (s-join "\n" (--map (helm-bibtex-make-bibtex it) keys)))))
+  (let ((keys (if (listp candidates) candidates (list candidates))))
+    (kill-new (s-join "\n" (--map (helm-bibtex-make-bibtex it) keys)))))
 
 (defun helm-bibtex-make-bibtex (key)
   (let* ((entry (helm-bibtex-get-entry key))
@@ -882,49 +909,43 @@ defined.  Surrounding curly braces are stripped."
              for field in entry
              for name = (car field)
              for value = (cdr field)
-             unless (member
-                     name
-                     (append
-                      (-map
-                       (lambda (it)
-                         (if (symbolp it)
-                             (symbol-name it)
-                           it))
-                       helm-bibtex-no-export-fields)
-                      '("=venue=" "=comment=" "=type=" "=key=" "=has-pdf="
-                        "=has-note=" "crossref" "keywords" "file" "comment"
-                        "owner" "timestamp" "__markedentry" "groups")))
+             unless (member name
+                            (append (-map (lambda (it) (if (symbolp it) (symbol-name it) it))
+                                          helm-bibtex-no-export-fields)
+                                    '("=type=" "=key=" "=has-pdf=" "=has-note=" "crossref"
+                                      "=venue=" "=comment=" "keywords" "file" "owner" "timestamp"
+                                      "__markedentry" "groups" "comment")))
              concat
              (format "  %s = %s,\n" name value)))))
 
-(defun helm-bibtex-add-PDF-attachment (_)
+(defun helm-bibtex-add-PDF-attachment (candidates)
   "Attach the PDFs of the selected entries where available."
   (--if-let
       (-flatten
-       (-map 'helm-bibtex-find-pdf (helm-marked-candidates :with-wildcard t)))
+       (-map 'helm-bibtex-find-pdf
+             (if (listp candidates) candidates (list candidates))))
       (-each it 'mml-attach-file)
     (message "No PDF(s) found.")))
 
-
-(defun helm-bibtex-send-pdf-dropbox (_)
+(defun helm-bibtex-send-pdf-dropbox (candidates)
   "Attach the PDFs of the selected entries where available."
   (--if-let
       (-flatten
-       (-map 'helm-bibtex-find-pdf (helm-marked-candidates :with-wildcard t)))
+       (-map 'helm-bibtex-find-pdf
+             (if (listp candidates) candidates (list candidates))))
       (-each it (lambda(fpath) (f-copy fpath helm-bibtex-dropbox-path)))
     (message "No PDF(s) found.")))
 
 (define-minor-mode helm-bibtex-notes-mode
-  "Minor mode for managing helm-bibtex notes."
+  "Minor mode for managing notes."
   :keymap (let ((map (make-sparse-keymap)))
             (define-key map (kbd "C-c C-c") 'helm-bibtex-exit-notes-buffer)
-	    (define-key map (kbd "C-c C-w") 'org-refile)
-	    (define-key map (kbd "C-c C-h") 'helm-bibtex-resume-session)
+            (define-key map (kbd "C-c C-w") 'org-refile)
             map)
-  (org-set-local
-   'header-line-format
+  (setq-local
+   header-line-format
    (substitute-command-keys
-    " Finish \\[helm-bibtex-exit-notes-buffer], refile \\[org-refile], back \\[helm-bibtex-resume-session]")))
+    " Finish \\[helm-bibtex-exit-notes-buffer], refile \\[org-refile]")))
 
 ;; Define global minor mode. This is needed to the toggle minor mode.
 (define-globalized-minor-mode helm-bibtex-notes-global-mode helm-bibtex-notes-mode helm-bibtex-notes-mode)
@@ -936,26 +957,18 @@ line."
   (interactive)
   (widen)
   (helm-bibtex-notes-global-mode -1)
-  (org-set-local
-   'header-line-format nil)
+  (setq-local
+   header-line-format nil)
   (save-buffer)
   (let ((window (get-buffer-window (file-name-nondirectory helm-bibtex-notes-path))))
     (if (and window (not (one-window-p window)))
-	(delete-window window)
+        (delete-window window)
       (switch-to-buffer (other-buffer)))))
-
-(defun helm-bibtex-resume-session ()
-  "Exit notes buffer (if active) and resume helm-bibtex session."
-  (interactive)
-  (let ((notes-buffer (get-file-buffer (file-name-nondirectory helm-bibtex-notes-path))))
-    (when (equal notes-buffer (current-buffer))
-      (helm-bibtex-exit-notes-buffer))
-    (helm-resume "*helm bibtex*")))
 
 (defun helm-bibtex-edit-notes (key)
   "Open the notes associated with the entry using `find-file'."
   (if (f-directory? helm-bibtex-notes-path)
-      ;; One notes file per publication:
+                                        ; One notes file per publication:
       (let ((path (f-join helm-bibtex-notes-path
                           (s-concat key helm-bibtex-notes-extension))))
         (find-file path)
@@ -963,7 +976,7 @@ line."
           (insert (s-format helm-bibtex-notes-template-multiple-files
                             'helm-bibtex-apa-get-value
                             (helm-bibtex-get-entry key)))))
-    ;; One file for all notes:
+                                        ; One file for all notes:
     (unless (and buffer-file-name
                  (f-same? helm-bibtex-notes-path buffer-file-name))
       (find-file-other-window helm-bibtex-notes-path))
@@ -971,13 +984,13 @@ line."
     (show-all)
     (goto-char (point-min))
     (if (re-search-forward (format helm-bibtex-notes-key-pattern key) nil t)
-        ;; Existing entry found:
+                                        ; Existing entry found:
         (when (eq major-mode 'org-mode)
           (org-narrow-to-subtree)
           (re-search-backward "^\*+ " nil t)
           (org-cycle-hide-drawers nil)
           (helm-bibtex-notes-mode 1))
-      ;; Create a new entry:
+                                        ; Create a new entry:
       (let ((entry (helm-bibtex-get-entry key)))
         (goto-char (point-max))
         (insert (s-format helm-bibtex-notes-template-one-file
@@ -1015,21 +1028,10 @@ line."
               browse-url-browser-function)))
     (cond
       ((stringp url-or-function)
-        (helm-browse-url (format url-or-function (url-hexify-string helm-pattern))))
+        (browse-url (format url-or-function (url-hexify-string helm-pattern))))
       ((functionp url-or-function)
         (funcall url-or-function))
       (t (error "Don't know how to interpret this: %s" url-or-function)))))
-
-(defun helm-bibtex-arxiv ()
-  "Search for the current `helm-pattern' in arXiv."
-  (let* ((browse-url-browser-function
-          (or helm-bibtex-browser-function
-              browse-url-browser-function))
-         (terms (s-split "\s+" helm-pattern))
-         (terms (-map 'url-hexify-string terms))
-         (terms (if (> (length terms) 1) (cons "AND" terms) terms)))
-    (helm-browse-url (format "http://arxiv.org/find/all/1/all:+%s/0/1/0/all/0/1"
-                             (s-join "+" terms)))))
 
 (defun helm-bibtex-fallback-candidates ()
   "Compile list of fallback options.  These consist of the online
@@ -1037,33 +1039,82 @@ resources defined in `helm-bibtex-fallback-options' plus one
 entry for each BibTeX file that will open that file for editing."
   (let ((bib-files (-flatten (list helm-bibtex-bibliography))))
     (-concat
-      (--map (cons (s-concat "Create new entry in " (f-filename it))
-                   `(lambda ()
-                      (find-file ,it)
-                      (goto-char (point-max))
-                      (newline)))
-             bib-files)
-      helm-bibtex-fallback-options)))
+     (--map (cons (s-concat "Create new entry in " (f-filename it))
+                  `(lambda () (find-file ,it) (goto-char (point-max)) (newline)))
+            bib-files)
+     helm-bibtex-fallback-options)))
 
+
+;; The following allows people to continue using their old helm-bibtex
+;; configurations:
+
+(cl-loop
+ for var in '("bibliography" "library-path" "pdf-open-function"
+              "pdf-symbol" "format-citation-functions" "notes-path"
+              "notes-template-multiple-files"
+              "notes-template-one-file" "notes-key-pattern"
+              "notes-extension" "notes-symbol" "fallback-options"
+              "browser-function" "additional-search-fields"
+              "no-export-fields" "cite-commands"
+              "cite-default-command"
+              "cite-prompt-for-optional-arguments"
+              "cite-default-as-initial-input" "pdf-field")
+ for oldvar = (intern (concat "helm-bibtex-" var))
+ for newvar = (intern (concat "helm-bibtex-" var))
+ do
+ (defvaralias newvar oldvar)
+ (make-obsolete-variable oldvar newvar "2016-03-20"))
+
+;; Helm-specific configurations:
+
+(defcustom helm-bibtex-full-frame t
+  "Non-nil means open `helm-bibtex' using the entire window. When
+nil, the window will split below."
+  :group 'helm-bibtex
+  :type 'boolean)
+
+(easy-menu-add-item nil '("Tools" "Helm" "Tools") ["BibTeX" helm-bibtex t])
+
+;; Candidate formatter:
+
+;; The function `window-width' does not necessarily report the correct
+;; number of characters that fit on a line.  This is a
+;; work-around.  See also this bug report:
+;; http://debbugs.gnu.org/cgi/bugreport.cgi?bug=19395
+(defun helm-bibtex-window-width ()
+  (if (and (not (featurep 'xemacs))
+           (display-graphic-p)
+           overflow-newline-into-fringe
+           (/= (frame-parameter nil 'left-fringe) 0)
+           (/= (frame-parameter nil 'right-fringe) 0))
+      (window-body-width)
+    (1- (window-body-width))))
+
+(defun helm-bibtex-candidates-formatter (candidates _)
+  (let ((width (with-helm-window (helm-bibtex-window-width))))
+    (helm-bibtex-candidates-formatter-default candidates width)))
+
+
+;; Helm sources:
 (defvar helm-source-bibtex
   (helm-build-sync-source "BibTeX entries"
-    :init #'helm-bibtex-init
-    :candidates #'helm-bibtex-candidates
-    :filtered-candidate-transformer #'helm-bibtex-candidate-formatter
+    :init 'helm-bibtex-init
+    :candidates 'helm-bibtex-candidates
+    :filtered-candidate-transformer 'helm-bibtex-candidates-formatter
     :action (helm-make-actions
-		"Open PDF in Emacs"   'helm-bibtex-open-pdf
-        "Open PDF in Zathura" 'helm-bibtex-open-pdf-zathura
-        "Open PDF in Okular"  'helm-bibtex-open-pdf-okular
-        "Insert citation"     'helm-bibtex-insert-citation
-        "Insert reference"    'helm-bibtex-insert-reference
-        "Insert BibTeX key"   'helm-bibtex-insert-key
-        "Insert BibTeX entry" 'helm-bibtex-insert-bibtex
-        "Copy Bibtex entry"   'helm-bibtex-copy-bibtex
-        "Send PDF to Dropbox" 'helm-bibtex-send-pdf-dropbox
-        "Edit notes"          'helm-bibtex-edit-notes
-        "Show entry"          'helm-bibtex-show-entry)
+             "Open PDF in Emacs"   'helm-bibtex-open-pdf
+             "Open PDF in Zathura" 'helm-bibtex-open-pdf-zathura
+             "Open PDF in Okular"  'helm-bibtex-open-pdf-okular
+             "Insert citation"     'helm-bibtex-insert-citation
+             "Insert reference"    'helm-bibtex-insert-reference
+             "Insert BibTeX key"   'helm-bibtex-insert-key
+             "Insert BibTeX entry" 'helm-bibtex-insert-bibtex
+             "Copy Bibtex entry"   'helm-bibtex-copy-bibtex
+             "Send PDF to Dropbox" 'helm-bibtex-send-pdf-dropbox
+             "Edit notes"          'helm-bibtex-edit-notes
+             "Show entry"          'helm-bibtex-show-entry)
     :fuzzy-match)
-"Source for searching in BibTeX files.")
+  "Source for searching in BibTeX files.")
 
 (defvar helm-source-fallback-options
   '((name            . "Fallback options")
@@ -1074,14 +1125,18 @@ entry for each BibTeX file that will open that file for editing."
     (action          . helm-bibtex-fallback-action))
   "Source for online look-up.")
 
+;; Helm-bibtex command:
+
 ;;;###autoload
 (defun helm-bibtex (&optional arg)
   "Search BibTeX entries.
-With a prefix ARG the cache is invalidated and the bibliography
+
+With a prefix ARG, the cache is invalidated and the bibliography
 reread."
   (interactive "P")
-  (when arg (setq helm-bibtex-bibliography-hash ""))
-  (helm :sources 'helm-source-bibtex
+  (when arg
+    (setq helm-bibtex-bibliography-hash ""))
+  (helm :sources helm-source-bibtex
         :full-frame helm-bibtex-full-frame
         :buffer "*helm bibtex*"
         :candidate-number-limit 100))
