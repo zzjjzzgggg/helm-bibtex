@@ -21,7 +21,7 @@
 ;;; Commentary:
 
 ;; A BibTeX bibliography manager based on Helm and the
-;; helm-bibtex backend
+;; bibtex-completion backend
 ;;
 ;; News:
 ;; - 04/18/2016: Improved support for Mendely/Jabref/Zotero way of
@@ -35,9 +35,9 @@
 ;; - 02/25/2016: Support for pre- and postnotes for pandoc-citeproc
 ;;   citations.
 ;; - 11/23/2015: Added support for keeping all notes in one
-;;   org-file.  See customization variable `helm-bibtex-notes-path'.
+;;   org-file.  See customization variable `bibtex-completion-notes-path'.
 ;; - 11/10/2015: Added support for PDFs specified in a BibTeX
-;;   field.  See customization variable `helm-bibtex-pdf-field'.
+;;   field.  See customization variable `bibtex-completion-pdf-field'.
 ;; - 11/09/2015: Improved insertion of LaTeX cite commands.
 ;;
 ;; See NEWS.org for old news.
@@ -78,7 +78,7 @@
 ;; https://github.com/emacs-helm/helm#install-from-emacs-packaging-system).
 ;;
 ;; Let helm-bibtex know where it can find your bibliography by setting
-;; the variable `helm-bibtex-bibliography'.  See the manual for
+;; the variable `bibtex-completion-bibliography'.  See the manual for
 ;; more details:
 ;;
 ;;   https://github.com/tmalsburg/helm-bibtex#minimal-configuration
@@ -104,106 +104,106 @@
 (require 'f)
 (require 'biblio)
 
-(defgroup helm-bibtex nil
+(defgroup bibtex-completion nil
   "Helm plugin for searching entries in a BibTeX bibliography."
   :group 'completion)
 
-(defcustom helm-bibtex-bibliography nil
+(defcustom bibtex-completion-bibliography nil
   "The BibTeX file or list of BibTeX files."
-  :group 'helm-bibtex
+  :group 'bibtex-completion
   :type '(choice file (repeat file)))
 
-(defcustom helm-bibtex-library-path nil
+(defcustom bibtex-completion-library-path nil
   "A directory or list of directories in which PDFs are stored.
 Bibtex-completion assumes that the names of these PDFs are
 composed of the BibTeX-key plus a \".pdf\" suffix."
-  :group 'helm-bibtex
+  :group 'bibtex-completion
   :type '(choice directory (repeat directory)))
 
-(defcustom helm-bibtex-dropbox-path "~/Dropbox"
+(defcustom bibtex-completion-dropbox-path "~/Dropbox"
   "Symbol used to indicate the Dropbox directory."
-  :group 'helm-bibtex
+  :group 'bibtex-completion
   :type '(choice directory (repeat directory)))
 
-(defcustom helm-bibtex-pdf-open-function 'find-file
+(defcustom bibtex-completion-pdf-open-function 'find-file
   "The function used for opening PDF files.  This can be an
 arbitrary function that takes one argument: the path to the PDF
 file.  The default is `find-file' which opens the PDF in
 Emacs (either with docview or, if installed, the much superior
 pdf-tools.  When set to `helm-open-file-with-default-tool', the
 systems default viewer for PDFs is used."
-  :group 'helm-bibtex
+  :group 'bibtex-completion
   :type 'function)
 
-(defcustom helm-bibtex-pdf-symbol "#"
+(defcustom bibtex-completion-pdf-symbol "#"
   "Symbol used to indicate that a PDF file is available for a
 publication.  This should be a single character."
-  :group 'helm-bibtex
+  :group 'bibtex-completion
   :type 'string)
 
-(defcustom helm-bibtex-format-citation-functions
-  '((org-mode      . helm-bibtex-format-citation-ebib)
-    (latex-mode    . helm-bibtex-format-citation-cite)
-    (markdown-mode . helm-bibtex-format-citation-pandoc-citeproc)
-    (default       . helm-bibtex-format-citation-default))
+(defcustom bibtex-completion-format-citation-functions
+  '((org-mode      . bibtex-completion-format-citation-ebib)
+    (latex-mode    . bibtex-completion-format-citation-cite)
+    (markdown-mode . bibtex-completion-format-citation-pandoc-citeproc)
+    (default       . bibtex-completion-format-citation-default))
   "The functions used for formatting citations.  The publication
 can be cited, for example, as \cite{key} or ebib:key depending on
 the major mode of the current buffer.  Note that the functions
 should accept a list of keys as input.  With multiple marked
 entries one can insert multiple keys at once,
 e.g. \cite{key1,key2}. See the functions
-`helm-bibtex-format-citation-ebib' and
-`helm-bibtex-format-citation-cite' as examples."
-  :group 'helm-bibtex
+`bibtex-completion-format-citation-ebib' and
+`bibtex-completion-format-citation-cite' as examples."
+  :group 'bibtex-completion
   :type '(alist :key-type symbol :value-type function))
 
-(defcustom helm-bibtex-notes-path nil
+(defcustom bibtex-completion-notes-path nil
   "The place where notes are stored.  This is either a file, in
 which case all notes are stored in that file, or a directory, in
 which case each publication gets its own notes file in that
-directory.  In the latter case, helm-bibtex assumes that the
+directory.  In the latter case, bibtex-completion assumes that the
 names of the note files are composed of the BibTeX-key plus a
-suffix that is specified in `helm-bibtex-notes-extension'."
-  :group 'helm-bibtex
+suffix that is specified in `bibtex-completion-notes-extension'."
+  :group 'bibtex-completion
   :type '(choice file directory))
 
-(defcustom helm-bibtex-notes-template-multiple-files
+(defcustom bibtex-completion-notes-template-multiple-files
   "#+TITLE: Notes on: ${author} (${year}): ${title}\n\n"
   "Template used to create a new note when each note is stored in
 a separate file.  '${field-name}' can be used to insert the value
 of a BibTeX field into the template."
-  :group 'helm-bibtex
+  :group 'bibtex-completion
   :type 'string)
 
-(defcustom helm-bibtex-notes-template-one-file
+(defcustom bibtex-completion-notes-template-one-file
   "\n* ${author} (${year}): ${title}\n  :PROPERTIES:\n  :Custom_ID: ${=key=}\n  :END:\n\n"
   "Template used to create a new note when all notes are stored
 in one file.  '${field-name}' can be used to insert the value of
 a BibTeX field into the template."
-  :group 'helm-bibtex
+  :group 'bibtex-completion
   :type 'string)
 
-(defcustom helm-bibtex-notes-key-pattern
+(defcustom bibtex-completion-notes-key-pattern
   ":Custom_ID: +%s\\( \\|$\\)"
   "The pattern used to find entries in the notes file.  Only
 relevant when all notes are stored in one file.  The key can be
 inserted into the pattern using the `format` function."
-  :group 'helm-bibtex
+  :group 'bibtex-completion
   :type 'string)
 
-(defcustom helm-bibtex-notes-extension ".org"
+(defcustom bibtex-completion-notes-extension ".org"
   "The extension of the files containing notes.  This is only
-used when `helm-bibtex-notes-path' is a directory (not a file)."
-  :group 'helm-bibtex
+used when `bibtex-completion-notes-path' is a directory (not a file)."
+  :group 'bibtex-completion
   :type 'string)
 
-(defcustom helm-bibtex-notes-symbol "+"
+(defcustom bibtex-completion-notes-symbol "+"
   "Symbol used to indicate that a publication has notes.  This
 should be a single character."
-  :group 'helm-bibtex
+  :group 'bibtex-completion
   :type 'string)
 
-(defcustom helm-bibtex-fallback-options
+(defcustom bibtex-completion-fallback-options
   '(("CrossRef                                  (biblio.el)"
      . (lambda () (biblio-lookup #'biblio-crossref-backend helm-pattern)))
     ("arXiv                                     (biblio.el)"
@@ -234,17 +234,17 @@ source.  The value is the URL used for retrieving results.  This
 URL must contain a %s in the position where the search term
 should be inserted.  Alternatively, the value can be a function
 that will be called when the entry is selected."
-  :group 'helm-bibtex
+  :group 'bibtex-completion
   :type '(alist :key-type string
                 :value-type (choice (string :tag "URL")
                             (function :tag "Function"))))
 
-(defcustom helm-bibtex-browser-function nil
+(defcustom bibtex-completion-browser-function nil
   "The browser that is used to access online resources.  If
 nil (default), the value of `browse-url-browser-function' is
 used.  If that value is nil, Helm uses the first available
 browser in `helm-browse-url-default-browser-alist'"
-  :group 'helm-bibtex
+  :group 'bibtex-completion
   :type '(choice
           (const         :tag "Default" :value nil)
           (function-item :tag "Emacs interface to w3m" :value w3m-browse-url)
@@ -280,19 +280,19 @@ browser in `helm-browse-url-default-browser-alist'"
           (alist         :tag "Regexp/function association list"
                          :key-type regexp :value-type function)))
 
-(defcustom helm-bibtex-additional-search-fields nil
+(defcustom bibtex-completion-additional-search-fields nil
   "The fields that are used for searching in addition to author,
 editor, title, year, BibTeX key, and entry type."
-  :group 'helm-bibtex
+  :group 'bibtex-completion
   :type 'list)
 
-(defcustom helm-bibtex-no-export-fields nil
+(defcustom bibtex-completion-no-export-fields nil
   "A list of fields that should be ignored when exporting BibTeX
 entries."
-  :group 'helm-bibtex
+  :group 'bibtex-completion
   :type 'list)
 
-(defcustom helm-bibtex-cite-commands '("cite" "Cite" "parencite"
+(defcustom bibtex-completion-cite-commands '("cite" "Cite" "parencite"
 "Parencite" "footcite" "footcitetext" "textcite" "Textcite"
 "smartcite" "Smartcite" "cite*" "parencite*" "supercite" "autocite"
 "Autocite" "autocite*" "Autocite*" "citeauthor" "Citeauthor"
@@ -305,60 +305,60 @@ citations, these can be accessed as future entries in the
 minibuffer history, i.e. by pressing the arrow down key.  The
 default entries are taken from biblatex.  There is currently no
 special support for multicite commands and volcite et al.  These
-commands can be used but helm-bibtex does not prompt for their
+commands can be used but bibtex-completion does not prompt for their
 extra arguments."
-  :group 'helm-bibtex
+  :group 'bibtex-completion
   :type '(choice string (repeat string)))
 
-(defcustom helm-bibtex-cite-default-command "cite"
+(defcustom bibtex-completion-cite-default-command "cite"
   "The LaTeX cite command that is used if the user doesn't enter
 anything when prompted for such a command."
-  :group 'helm-bibtex
+  :group 'bibtex-completion
   :type 'string)
 
-(defcustom helm-bibtex-cite-prompt-for-optional-arguments t
-  "If t, helm-bibtex prompts for pre- and postnotes for
+(defcustom bibtex-completion-cite-prompt-for-optional-arguments t
+  "If t, bibtex-completion prompts for pre- and postnotes for
 LaTeX cite commands.  Choose nil for no prompts."
-  :group 'helm-bibtex
+  :group 'bibtex-completion
   :type 'boolean)
 
-(defcustom helm-bibtex-cite-default-as-initial-input nil
+(defcustom bibtex-completion-cite-default-as-initial-input nil
   "This variable controls how the default command defined in
-`helm-bibtex-cite-default-command' is used.  If t, it is inserted
+`bibtex-completion-cite-default-command' is used.  If t, it is inserted
 into the minibuffer before reading input from the user.  If nil,
 it is used as the default if the user doesn't enter anything."
-  :group 'helm-bibtex
+  :group 'bibtex-completion
   :type 'boolean)
 
-(defcustom helm-bibtex-pdf-field nil
+(defcustom bibtex-completion-pdf-field nil
   "The name of the BibTeX field in which the path to PDF files is
 stored or nil if no such field should be used.  If an entry has
 no value for this field, or if the specified file does not exist,
-or if this variable is nil, helm-bibtex will look up the PDF in
-the directories listed in `helm-bibtex-library-path'."
-  :group 'helm-bibtex
+or if this variable is nil, bibtex-completion will look up the PDF in
+the directories listed in `bibtex-completion-library-path'."
+  :group 'bibtex-completion
   :type 'string)
 
-(defvar helm-bibtex-bibliography-hash nil
+(defvar bibtex-completion-bibliography-hash nil
   "The hash of the content of the configured bibliography
 files.  If this hash has not changed since the bibliography was
 last parsed, a cached version of the parsed bibliography will be
 used.")
 
-(defvar helm-bibtex-cached-candidates nil
+(defvar bibtex-completion-cached-candidates nil
   "The a list of candidates obtained when the configured
 bibliography files were last parsed.")
 
 
-(defun helm-bibtex-init ()
+(defun bibtex-completion-init ()
   "Checks that the files and directories specified by the user
 actually exist."
   (mapc (lambda (file)
           (unless (f-file? file)
                   (user-error "BibTeX file %s could not be found." file)))
-        (-flatten (list helm-bibtex-bibliography))))
+        (-flatten (list bibtex-completion-bibliography))))
 
-(defun helm-bibtex-candidates (&optional formatter)
+(defun bibtex-completion-candidates (&optional formatter)
   "Reads the BibTeX files and returns a list of conses, one for
 each entry.  The first element of these conses is a string
 containing authors, editors, title, year, type, and key of the
@@ -370,48 +370,48 @@ before being saved."
   ;; Open configured bibliographies in temporary buffer:
   (with-temp-buffer
     (mapc #'insert-file-contents
-          (-flatten (list helm-bibtex-bibliography)))
+          (-flatten (list bibtex-completion-bibliography)))
     ;; Check hash of bibliography and reparse if necessary:
     (let ((bibliography-hash (secure-hash 'sha256 (current-buffer))))
-      (unless (and helm-bibtex-cached-candidates
-                   (string= helm-bibtex-bibliography-hash bibliography-hash))
+      (unless (and bibtex-completion-cached-candidates
+                   (string= bibtex-completion-bibliography-hash bibliography-hash))
         (message "Loading bibliography ...")
-        (let* ((entries (helm-bibtex-parse-bibliography))
-               (entries (helm-bibtex-resolve-crossrefs entries))
-               (entries (helm-bibtex-prepare-entries entries))
+        (let* ((entries (bibtex-completion-parse-bibliography))
+               (entries (bibtex-completion-resolve-crossrefs entries))
+               (entries (bibtex-completion-prepare-entries entries))
                (entries
-                (--map (cons (helm-bibtex-clean-string
+                (--map (cons (bibtex-completion-clean-string
                                   (s-join " " (-map #'cdr it))) it)
                            entries)))
-          (setq helm-bibtex-cached-candidates
+          (setq bibtex-completion-cached-candidates
                 (if (functionp formatter)
                     (funcall formatter entries)
                   entries)))
-        (setq helm-bibtex-bibliography-hash bibliography-hash))
-      helm-bibtex-cached-candidates)))
+        (setq bibtex-completion-bibliography-hash bibliography-hash))
+      bibtex-completion-cached-candidates)))
 
-(defun helm-bibtex-resolve-crossrefs (entries)
+(defun bibtex-completion-resolve-crossrefs (entries)
   "Expand all entries with fields from cross-references entries."
    (cl-loop
     with entry-hash =
       (cl-loop
        with ht = (make-hash-table :test #'equal :size (length entries))
        for entry in entries
-       for key = (helm-bibtex-get-value "=key=" entry)
+       for key = (bibtex-completion-get-value "=key=" entry)
        ;; Other types than proceedings and books can be
        ;; cross-referenced, but I suppose that isn't really used:
-       if (member (downcase (helm-bibtex-get-value "=type=" entry))
+       if (member (downcase (bibtex-completion-get-value "=type=" entry))
                   '("proceedings" "book"))
        do (puthash (downcase key) entry ht)
        finally return ht)
     for entry in entries
-    for crossref = (helm-bibtex-get-value "crossref" entry)
+    for crossref = (bibtex-completion-get-value "crossref" entry)
     if crossref
       collect (append entry (gethash (downcase crossref) entry-hash))
     else
       collect entry))
 
-(defun helm-bibtex-parse-bibliography ()
+(defun bibtex-completion-parse-bibliography ()
   "Parse the BibTeX entries listed in the current buffer and
 return a list of entry keys in the order in which the entries
 appeared in the BibTeX files."
@@ -424,49 +424,49 @@ appeared in the BibTeX files."
                    (cons (downcase (car it)) (cdr it)))
                  (parsebib-read-entry entry-type))))
 
-(defun helm-bibtex-get-entry (entry-key)
+(defun bibtex-completion-get-entry (entry-key)
   "Given a BibTeX key this function scans all bibliographies
-listed in `helm-bibtex-bibliography' and returns an alist of the
+listed in `bibtex-completion-bibliography' and returns an alist of the
 record with that key.  Fields from crossreferenced entries are
 appended to the requested entry."
-  (let* ((entry (helm-bibtex-get-entry1 entry-key))
-         (crossref (helm-bibtex-get-value "crossref" entry))
-         (crossref (when crossref (helm-bibtex-get-entry1 crossref))))
+  (let* ((entry (bibtex-completion-get-entry1 entry-key))
+         (crossref (bibtex-completion-get-value "crossref" entry))
+         (crossref (when crossref (bibtex-completion-get-entry1 crossref))))
     (cl-remove-duplicates (append entry crossref)
                           :test (lambda (x y) (string= (s-downcase x) (s-downcase y)))
                           :key 'car :from-end t)))
 
-(defun helm-bibtex-get-entry1 (entry-key &optional do-not-find-pdf)
+(defun bibtex-completion-get-entry1 (entry-key &optional do-not-find-pdf)
   (with-temp-buffer
     (mapc #'insert-file-contents
-          (-flatten (list helm-bibtex-bibliography)))
+          (-flatten (list bibtex-completion-bibliography)))
     (goto-char (point-min))
     (re-search-forward (concat "^@\\(" parsebib--bibtex-identifier
                                "\\)[[:space:]]*[\(\{][[:space:]]*"
                                (regexp-quote entry-key) "[[:space:]]*,"))
     (let ((entry-type (match-string 1)))
-      (reverse (helm-bibtex-prepare-entry (parsebib-read-entry entry-type) nil do-not-find-pdf)))))
+      (reverse (bibtex-completion-prepare-entry (parsebib-read-entry entry-type) nil do-not-find-pdf)))))
 
-(defun helm-bibtex-prepare-entries (entries)
+(defun bibtex-completion-prepare-entries (entries)
   "Do some preprocessing of the entries."
   (cl-loop
    with fields = (append '("title" "year" "crossref")
                          (-map (lambda (it) (if (symbolp it) (symbol-name it) it))
-                               helm-bibtex-additional-search-fields))
+                               bibtex-completion-additional-search-fields))
    for entry in entries
-   collect (helm-bibtex-prepare-entry entry
+   collect (bibtex-completion-prepare-entry entry
             (cons (if (assoc-string "author" entry 'case-fold) "author" "editor") fields))))
 
-(defun helm-bibtex-find-pdf-in-field (key-or-entry)
+(defun bibtex-completion-find-pdf-in-field (key-or-entry)
   "Returns the path of the PDF specified in the field
-`helm-bibtex-pdf-field' if that file exists.  Returns nil if no
+`bibtex-completion-pdf-field' if that file exists.  Returns nil if no
 file is specified, or if the specified file does not exist, or if
-`helm-bibtex-pdf-field' is nil."
-  (when helm-bibtex-pdf-field
+`bibtex-completion-pdf-field' is nil."
+  (when bibtex-completion-pdf-field
     (let* ((entry (if (stringp key-or-entry)
-                      (helm-bibtex-get-entry1 key-or-entry t)
+                      (bibtex-completion-get-entry1 key-or-entry t)
                     key-or-entry))
-           (value (helm-bibtex-get-value helm-bibtex-pdf-field entry)))
+           (value (bibtex-completion-get-value bibtex-completion-pdf-field entry)))
       (cond
        ((not value) nil)         ; Field not defined.
        ((f-file? value) value)   ; A bare full path was found.
@@ -491,34 +491,34 @@ file is specified, or if the specified file does not exist, or if
                            (f-join (f-root) path) ; Mendeley #105
                            (f-join (f-root) path file-name)) ; Mendeley #105
                           (--map (f-join it path)
-                                 (-flatten helm-bibtex-library-path)) ; Jabref #100
+                                 (-flatten bibtex-completion-library-path)) ; Jabref #100
                           (--map (f-join it path file-name)
-                                 (-flatten helm-bibtex-library-path)))) ; Jabref #100
+                                 (-flatten bibtex-completion-library-path)))) ; Jabref #100
            for result = (-first 'f-exists? paths)
            if result collect result)))))))
 
-(defun helm-bibtex-find-pdf-in-library (key-or-entry)
-  "Searches the directories in `helm-bibtex-library-path' for a
+(defun bibtex-completion-find-pdf-in-library (key-or-entry)
+  "Searches the directories in `bibtex-completion-library-path' for a
 PDF whose names is composed of the BibTeX key plus \".pdf\".  The
 path of the first matching PDF is returned."
   (let* ((key (if (stringp key-or-entry)
                   key-or-entry
-                (helm-bibtex-get-value "=key=" key-or-entry)))
+                (bibtex-completion-get-value "=key=" key-or-entry)))
          (path (-first 'f-file?
                        (--map (f-join it (s-concat key ".pdf"))
-                              (-flatten (list helm-bibtex-library-path))))))
+                              (-flatten (list bibtex-completion-library-path))))))
     (when path (list path))))
 
-(defun helm-bibtex-find-pdf (key-or-entry)
+(defun bibtex-completion-find-pdf (key-or-entry)
   "Returns the path of the PDF associated with the specified
 entry.  This is either the path specified in the field
-`helm-bibtex-pdf-field' or, if that does not exist, the first PDF
-in any of the directories in `helm-bibtex-library-path' whose
+`bibtex-completion-pdf-field' or, if that does not exist, the first PDF
+in any of the directories in `bibtex-completion-library-path' whose
 name is \"<bibtex-key>.pdf\".  Returns nil if no PDF is found."
-  (or (helm-bibtex-find-pdf-in-field key-or-entry)
-      (helm-bibtex-find-pdf-in-library key-or-entry)))
+  (or (bibtex-completion-find-pdf-in-field key-or-entry)
+      (bibtex-completion-find-pdf-in-library key-or-entry)))
 
-(defun helm-bibtex-prepare-entry (entry &optional fields do-not-find-pdf)
+(defun bibtex-completion-prepare-entry (entry &optional fields do-not-find-pdf)
   "Prepare ENTRY for display.
 ENTRY is an alist representing an entry as returned by
 parsebib-read-entry. All the fields not in FIELDS are removed
@@ -530,19 +530,19 @@ find a PDF file."
   (when entry ; entry may be nil, in which case just return nil
     (let* ((fields (when fields (append fields (list "=venue=" "=comment=" "=type=" "=key=" "=has-pdf=" "=has-note="))))
            ; Check for PDF:
-           (entry (if (and (not do-not-find-pdf) (helm-bibtex-find-pdf entry))
-                      (cons (cons "=has-pdf=" helm-bibtex-pdf-symbol) entry)
+           (entry (if (and (not do-not-find-pdf) (bibtex-completion-find-pdf entry))
+                      (cons (cons "=has-pdf=" bibtex-completion-pdf-symbol) entry)
                     entry))
            (entry-key (cdr (assoc "=key=" entry)))
            ;; venue
-           (entry (let* ((booktitle (helm-bibtex-get-value "booktitle" entry ""))
-                         (journal (helm-bibtex-get-value "journal" entry "")))
+           (entry (let* ((booktitle (bibtex-completion-get-value "booktitle" entry ""))
+                         (journal (bibtex-completion-get-value "journal" entry "")))
                     ;; if `booktitle' or `journal' field is not empty
                     (if (not (and (string= "" booktitle) (string= "" journal)))
                         (cons (cons "=venue=" (concat booktitle journal)) entry)
                       entry)))
            ;; comment
-           (entry (let* ((comment (helm-bibtex-get-value "comment" entry "")))
+           (entry (let* ((comment (bibtex-completion-get-value "comment" entry "")))
                     ;; if `comment' field is not empty
                     (if (not (string= "" comment))
                       (cons (cons "=comment=" (substring comment 0 1)) entry)
@@ -550,18 +550,18 @@ find a PDF file."
            ; Check for notes:
            (entry (if (or
                        ;; One note file per entry:
-                       (and helm-bibtex-notes-path
-                            (f-directory? helm-bibtex-notes-path)
-                            (f-file? (f-join helm-bibtex-notes-path
+                       (and bibtex-completion-notes-path
+                            (f-directory? bibtex-completion-notes-path)
+                            (f-file? (f-join bibtex-completion-notes-path
                                              (s-concat entry-key
-                                                       helm-bibtex-notes-extension))))
+                                                       bibtex-completion-notes-extension))))
                        ;; All notes in one file:
-                       (and helm-bibtex-notes-path
-                            (f-file? helm-bibtex-notes-path)
-                            (with-current-buffer (find-file-noselect helm-bibtex-notes-path)
+                       (and bibtex-completion-notes-path
+                            (f-file? bibtex-completion-notes-path)
+                            (with-current-buffer (find-file-noselect bibtex-completion-notes-path)
                               (goto-char (point-min))
-                              (re-search-forward (format helm-bibtex-notes-key-pattern entry-key) nil t))))
-                      (cons (cons "=has-note=" helm-bibtex-notes-symbol) entry)
+                              (re-search-forward (format bibtex-completion-notes-key-pattern entry-key) nil t))))
+                      (cons (cons "=has-note=" bibtex-completion-notes-symbol) entry)
                     entry))
            ; Remove unwanted fields:
            (entry (if fields
@@ -576,21 +576,21 @@ find a PDF file."
 
 
 
-(defun helm-bibtex-candidates-formatter-default (candidates width)
+(defun bibtex-completion-candidates-formatter (candidates width)
   "Formats BibTeX entries for display in results list."
   (cl-loop
    for entry in candidates
    for entry = (cdr entry)
-   for entry-key = (helm-bibtex-get-value "=key=" entry)
+   for entry-key = (bibtex-completion-get-value "=key=" entry)
    if (assoc-string "author" entry 'case-fold)
    for fields = '("author" "title" "year" "=has-pdf=" "=has-note=" "=comment=" "=venue=")
    else
    for fields = '("editor" "title" "year" "=has-pdf=" "=has-note=" "=comment=" "=venue=")
    for fields = (-map (lambda (it)
-                        (helm-bibtex-clean-string
-                          (helm-bibtex-get-value it entry " ")))
+                        (bibtex-completion-clean-string
+                          (bibtex-completion-get-value it entry " ")))
                       fields)
-   for fields = (-update-at 0 'helm-bibtex-shorten-authors fields)
+   for fields = (-update-at 0 'bibtex-completion-shorten-authors fields)
    collect
    (cons (s-format "$0  $1 $2 $3$4$5 $6" 'elt
                    (-zip-with (lambda (f w)
@@ -599,14 +599,14 @@ find a PDF file."
          entry-key)))
 
 
-(defun helm-bibtex-clean-string (s)
+(defun bibtex-completion-clean-string (s)
   "Removes quoting and superfluous white space from BibTeX field
 values."
   (if s (replace-regexp-in-string "[\n\t ]+" " "
          (replace-regexp-in-string "[\"{}]+" "" s))
     nil))
 
-(defun helm-bibtex-shorten-authors (authors)
+(defun bibtex-completion-shorten-authors (authors)
   "Returns a comma-separated list of the surnames in authors."
   (if authors
       (cl-loop for a in (s-split " and " authors)
@@ -620,49 +620,49 @@ values."
     nil))
 
 
-(defun helm-bibtex-open-pdf (candidates)
+(defun bibtex-completion-open-pdf (candidates)
   "Open the PDFs associated with the marked entries using the
-function specified in `helm-bibtex-pdf-open-function'.  All paths
-in `helm-bibtex-library-path' are searched.  If there are several
+function specified in `bibtex-completion-pdf-open-function'.  All paths
+in `bibtex-completion-library-path' are searched.  If there are several
 matching PDFs for an entry, the first is opened."
   (--if-let
       (-flatten
-       (-map 'helm-bibtex-find-pdf
+       (-map 'bibtex-completion-find-pdf
              (if (listp candidates) candidates (list candidates))))
-      (-each it helm-bibtex-pdf-open-function)
+      (-each it bibtex-completion-pdf-open-function)
     (message "No PDF(s) found.")))
 
-(defun helm-bibtex-open-pdf-zathura(candidates)
+(defun bibtex-completion-open-pdf-zathura(candidates)
   "Open the PDFs associated with the marked entries in Zathura.  All paths
 in `helm-bibtex-library-path' are searched.  If there are several
 matching PDFs for an entry, the first is opened."
   (--if-let
       (-flatten
-       (-map 'helm-bibtex-find-pdf
+       (-map 'bibtex-completion-find-pdf
              (if (listp candidates) candidates (list candidates))))
       (-each it (lambda(fpath) (call-process "zathura" nil 0 nil fpath)))
     (message "No PDF(s) found.")))
 
-(defun helm-bibtex-open-pdf-okular (candidates)
+(defun bibtex-completion-open-pdf-okular (candidates)
   "Open the PDFs associated with the marked entries in Okular.  All paths
 in `helm-bibtex-library-path' are searched.  If there are several
 matching PDFs for an entry, the first is opened."
   (--if-let
       (-flatten
-       (-map 'helm-bibtex-find-pdf
+       (-map 'bibtex-completion-find-pdf
              (if (listp candidates) candidates (list candidates))))
       (-each it (lambda(fpath) (call-process "okular" nil 0 nil fpath)))
     (message "No PDF(s) found.")))
 
-(defun helm-bibtex-open-url-or-doi (candidates)
+(defun bibtex-completion-open-url-or-doi (candidates)
   "Open the associated URL or DOI in a browser."
   (let ((keys (if (listp candidates) candidates (list candidates))))
     (dolist (key keys)
-      (let* ((entry (helm-bibtex-get-entry key))
-             (url (helm-bibtex-get-value "url" entry))
-             (doi (helm-bibtex-get-value "doi" entry))
+      (let* ((entry (bibtex-completion-get-entry key))
+             (url (bibtex-completion-get-value "url" entry))
+             (doi (bibtex-completion-get-value "doi" entry))
              (browse-url-browser-function
-              (or helm-bibtex-browser-function
+              (or bibtex-completion-browser-function
                   browse-url-browser-function)))
         (if url (browse-url url)
           (if doi (browse-url
@@ -670,129 +670,129 @@ matching PDFs for an entry, the first is opened."
           (message "No URL or DOI found for this entry: %s"
                    key))))))
 
-(defun helm-bibtex-format-citation-default (keys)
+(defun bibtex-completion-format-citation-default (keys)
   "Default formatter for keys, separates multiple keys with commas."
   (s-join ", " keys))
 
-(defvar helm-bibtex-cite-command-history nil
+(defvar bibtex-completion-cite-command-history nil
   "History list for LaTeX citation commands.")
 
-(defun helm-bibtex-format-citation-cite (keys)
+(defun bibtex-completion-format-citation-cite (keys)
   "Formatter for LaTeX citation commands.  Prompts for the command and
 for arguments if the commands can take any."
-  (let* ((initial (when helm-bibtex-cite-default-as-initial-input helm-bibtex-cite-default-command))
-         (default (unless helm-bibtex-cite-default-as-initial-input helm-bibtex-cite-default-command))
+  (let* ((initial (when bibtex-completion-cite-default-as-initial-input bibtex-completion-cite-default-command))
+         (default (unless bibtex-completion-cite-default-as-initial-input bibtex-completion-cite-default-command))
          (default-info (if default (format " (default \"%s\")" default) ""))
          (cite-command (completing-read
                         (format "Cite command%s: " default-info)
-                        helm-bibtex-cite-commands nil nil initial
-                        'helm-bibtex-cite-command-history default nil)))
+                        bibtex-completion-cite-commands nil nil initial
+                        'bibtex-completion-cite-command-history default nil)))
     (if (member cite-command '("nocite" "supercite"))  ; These don't want arguments.
         (format "\\%s{%s}" cite-command (s-join ", " keys))
-      (let ((prenote  (if helm-bibtex-cite-prompt-for-optional-arguments (read-from-minibuffer "Prenote: ") ""))
-            (postnote (if helm-bibtex-cite-prompt-for-optional-arguments (read-from-minibuffer "Postnote: ") "")))
+      (let ((prenote  (if bibtex-completion-cite-prompt-for-optional-arguments (read-from-minibuffer "Prenote: ") ""))
+            (postnote (if bibtex-completion-cite-prompt-for-optional-arguments (read-from-minibuffer "Postnote: ") "")))
         (if (and (string= "" prenote) (string= "" postnote))
             (format "\\%s{%s}" cite-command (s-join ", " keys))
           (format "\\%s[%s][%s]{%s}" cite-command prenote postnote (s-join ", " keys)))))))
 
-(defun helm-bibtex-format-citation-pandoc-citeproc (keys)
+(defun bibtex-completion-format-citation-pandoc-citeproc (keys)
   "Formatter for pandoc-citeproc citations."
-  (let* ((prenote  (if helm-bibtex-cite-prompt-for-optional-arguments (read-from-minibuffer "Prenote: ") ""))
-         (postnote (if helm-bibtex-cite-prompt-for-optional-arguments (read-from-minibuffer "Postnote: ") ""))
+  (let* ((prenote  (if bibtex-completion-cite-prompt-for-optional-arguments (read-from-minibuffer "Prenote: ") ""))
+         (postnote (if bibtex-completion-cite-prompt-for-optional-arguments (read-from-minibuffer "Postnote: ") ""))
          (prenote  (if (string= "" prenote)  "" (concat prenote  " ")))
          (postnote (if (string= "" postnote) "" (concat ", " postnote))))
     (format "[%s%s%s]" prenote (s-join "; " (--map (concat "@" it) keys)) postnote)))
 
-(defun helm-bibtex-format-citation-ebib (keys)
+(defun bibtex-completion-format-citation-ebib (keys)
   "Formatter for ebib references."
   (s-join ", "
           (--map (format "ebib:%s" it) keys)))
 
-(defun helm-bibtex-format-citation-org-link-to-PDF (keys)
+(defun bibtex-completion-format-citation-org-link-to-PDF (keys)
   "Formatter for org-links to PDF.  Uses first matching PDF if
 several are available.  Entries for which no PDF is available are
 omitted."
   (s-join ", " (cl-loop
                 for key in keys
-                for pdfs = (helm-bibtex-find-pdf key)
+                for pdfs = (bibtex-completion-find-pdf key)
                 append (--map (format "[[%s][%s]]" it key) pdfs))))
 
-(defun helm-bibtex-insert-citation (candidates)
+(defun bibtex-completion-insert-citation (candidates)
   "Insert citation at point.  The format depends on
-`helm-bibtex-format-citation-functions'."
+`bibtex-completion-format-citation-functions'."
   (let ((keys (if (listp candidates) candidates (list candidates)))
         (format-function
-         (cdr (or (assoc major-mode helm-bibtex-format-citation-functions)
-                  (assoc 'default   helm-bibtex-format-citation-functions)))))
+         (cdr (or (assoc major-mode bibtex-completion-format-citation-functions)
+                  (assoc 'default   bibtex-completion-format-citation-functions)))))
     (insert
      (funcall format-function keys))))
 
-(defun helm-bibtex-insert-reference (candidates)
+(defun bibtex-completion-insert-reference (candidates)
   "Insert a reference for each selected entry."
   (let* ((keys (if (listp candidates) candidates (list candidates)))
          (refs (--map
                 (s-word-wrap fill-column
-                             (concat "\n- " (helm-bibtex-apa-format-reference it)))
+                             (concat "\n- " (bibtex-completion-apa-format-reference it)))
                 keys)))
     (insert "\n" (s-join "\n" refs) "\n")))
 
-(defun helm-bibtex-apa-format-reference (key)
+(defun bibtex-completion-apa-format-reference (key)
   "Returns a plain text reference in APA format for the
 publication specified by KEY."
   (let*
-   ((entry (helm-bibtex-get-entry key))
-    (ref (pcase (downcase (helm-bibtex-get-value "=type=" entry))
+   ((entry (bibtex-completion-get-entry key))
+    (ref (pcase (downcase (bibtex-completion-get-value "=type=" entry))
            ("article"
             (s-format
              "${author} (${year}). ${title}. ${journal}, ${volume}(${number}), ${pages}.${doi}"
-             'helm-bibtex-apa-get-value entry))
+             'bibtex-completion-apa-get-value entry))
            ("inproceedings"
             (s-format
              "${author} (${year}). ${title}. In ${editor}, ${booktitle} (pp. ${pages}). ${address}: ${publisher}."
-             'helm-bibtex-apa-get-value entry))
+             'bibtex-completion-apa-get-value entry))
            ("book"
             (s-format
              "${author} (${year}). ${title}. ${address}: ${publisher}."
-             'helm-bibtex-apa-get-value entry))
+             'bibtex-completion-apa-get-value entry))
            ("phdthesis"
             (s-format
              "${author} (${year}). ${title} (Doctoral dissertation). ${school}, ${address}."
-             'helm-bibtex-apa-get-value entry))
+             'bibtex-completion-apa-get-value entry))
            ("inbook"
             (s-format
              "${author} (${year}). ${title}. In ${editor} (Eds.), ${booktitle} (pp. ${pages}). ${address}: ${publisher}."
-             'helm-bibtex-apa-get-value entry))
+             'bibtex-completion-apa-get-value entry))
            ("incollection"
             (s-format
              "${author} (${year}). ${title}. In ${editor} (Eds.), ${booktitle} (pp. ${pages}). ${address}: ${publisher}."
-             'helm-bibtex-apa-get-value entry))
+             'bibtex-completion-apa-get-value entry))
            ("proceedings"
             (s-format
              "${editor} (Eds.). (${year}). ${booktitle}. ${address}: ${publisher}."
-             'helm-bibtex-apa-get-value entry))
+             'bibtex-completion-apa-get-value entry))
            ("unpublished"
             (s-format
              "${author} (${year}). ${title}. Unpublished manuscript."
-             'helm-bibtex-apa-get-value entry))
+             'bibtex-completion-apa-get-value entry))
            (_
             (s-format
              "${author} (${year}). ${title}."
-             'helm-bibtex-apa-get-value entry)))))
+             'bibtex-completion-apa-get-value entry)))))
     (replace-regexp-in-string "\\([.?!]\\)\\." "\\1" ref))) ; Avoid sequences of punctuation marks.
 
-(defun helm-bibtex-apa-get-value (field entry &optional default)
+(defun bibtex-completion-apa-get-value (field entry &optional default)
   "Return FIELD or ENTRY formatted following the APA
 guidelines.  Return DEFAULT if FIELD is not present in ENTRY."
-  (let ((value (helm-bibtex-get-value field entry))
-        (entry-type (helm-bibtex-get-value "=type=" entry)))
+  (let ((value (bibtex-completion-get-value field entry))
+        (entry-type (bibtex-completion-get-value "=type=" entry)))
     (if value
        (pcase field
          ;; https://owl.english.purdue.edu/owl/resource/560/06/
-         ("author" (helm-bibtex-apa-format-authors value))
+         ("author" (bibtex-completion-apa-format-authors value))
          ("editor"
           (if (string= entry-type "proceedings")
-              (helm-bibtex-apa-format-editors value)
-            (helm-bibtex-apa-format-editors value)))
+              (bibtex-completion-apa-format-editors value)
+            (bibtex-completion-apa-format-editors value)))
          ;; When referring to books, chapters, articles, or Web pages,
          ;; capitalize only the first letter of the first word of a
          ;; title and subtitle, the first word after a colon or a dash
@@ -816,7 +816,7 @@ guidelines.  Return DEFAULT if FIELD is not present in ENTRY."
          (_ value))
       "")))
 
-(defun helm-bibtex-apa-format-authors (value)
+(defun bibtex-completion-apa-format-authors (value)
   (cl-loop for a in (s-split " and " value t)
            if (s-index-of "{" a)
              collect
@@ -846,7 +846,7 @@ guidelines.  Return DEFAULT if FIELD is not present in ENTRY."
                                   ", & " (-last-item authors)))
                  (t (concat (s-join ", " authors) ", ..."))))))
 
-(defun helm-bibtex-apa-format-editors (value)
+(defun bibtex-completion-apa-format-editors (value)
   (cl-loop for a in (s-split " and " value t)
            if (s-index-of "," a)
              collect
@@ -872,7 +872,7 @@ guidelines.  Return DEFAULT if FIELD is not present in ENTRY."
                                   ", & " (-last-item authors)))
                  (t (concat (s-join ", " authors) ", ..."))))))
 
-(defun helm-bibtex-get-value (field entry &optional default)
+(defun bibtex-completion-get-value (field entry &optional default)
   "Return the requested value or `default' if the value is not
 defined.  Surrounding curly braces are stripped."
   (let ((value (cdr (assoc-string field entry 'case-fold))))
@@ -884,25 +884,25 @@ defined.  Surrounding curly braces are stripped."
           value))
       default)))
 
-(defun helm-bibtex-insert-key (candidates)
+(defun bibtex-completion-insert-key (candidates)
   "Insert BibTeX key at point."
   (let ((keys (if (listp candidates) candidates (list candidates))))
     (insert
-     (funcall 'helm-bibtex-format-citation-default keys))))
+     (funcall 'bibtex-completion-format-citation-default keys))))
 
-(defun helm-bibtex-insert-bibtex (candidates)
+(defun bibtex-completion-insert-bibtex (candidates)
   "Insert BibTeX key at point."
   (let ((keys (if (listp candidates) candidates (list candidates))))
-    (insert (s-join "\n" (--map (helm-bibtex-make-bibtex it) keys)))))
+    (insert (s-join "\n" (--map (bibtex-completion-make-bibtex it) keys)))))
 
-(defun helm-bibtex-copy-bibtex (candidates)
+(defun bibtex-completion-copy-bibtex (candidates)
   "copy BibTeX entry."
   (let ((keys (if (listp candidates) candidates (list candidates))))
-    (kill-new (s-join "\n" (--map (helm-bibtex-make-bibtex it) keys)))))
+    (kill-new (s-join "\n" (--map (bibtex-completion-make-bibtex it) keys)))))
 
-(defun helm-bibtex-make-bibtex (key)
-  (let* ((entry (helm-bibtex-get-entry key))
-         (entry-type (helm-bibtex-get-value "=type=" entry)))
+(defun bibtex-completion-make-bibtex (key)
+  (let* ((entry (bibtex-completion-get-entry key))
+         (entry-type (bibtex-completion-get-value "=type=" entry)))
     (format "@%s{%s,\n%s}\n"
             entry-type key
             (cl-loop
@@ -911,107 +911,107 @@ defined.  Surrounding curly braces are stripped."
              for value = (cdr field)
              unless (member name
                             (append (-map (lambda (it) (if (symbolp it) (symbol-name it) it))
-                                          helm-bibtex-no-export-fields)
+                                          bibtex-completion-no-export-fields)
                                     '("=type=" "=key=" "=has-pdf=" "=has-note=" "crossref"
                                       "=venue=" "=comment=" "keywords" "file" "owner" "timestamp"
                                       "__markedentry" "groups" "comment")))
              concat
              (format "  %s = %s,\n" name value)))))
 
-(defun helm-bibtex-add-PDF-attachment (candidates)
+(defun bibtex-completion-add-PDF-attachment (candidates)
   "Attach the PDFs of the selected entries where available."
   (--if-let
       (-flatten
-       (-map 'helm-bibtex-find-pdf
+       (-map 'bibtex-completion-find-pdf
              (if (listp candidates) candidates (list candidates))))
       (-each it 'mml-attach-file)
     (message "No PDF(s) found.")))
 
-(defun helm-bibtex-send-pdf-dropbox (candidates)
+(defun bibtex-completion-send-pdf-dropbox (candidates)
   "Attach the PDFs of the selected entries where available."
   (--if-let
       (-flatten
-       (-map 'helm-bibtex-find-pdf
+       (-map 'bibtex-completion-find-pdf
              (if (listp candidates) candidates (list candidates))))
-      (-each it (lambda(fpath) (f-copy fpath helm-bibtex-dropbox-path)))
+      (-each it (lambda(fpath) (f-copy fpath bibtex-completion-dropbox-path)))
     (message "No PDF(s) found.")))
 
-(define-minor-mode helm-bibtex-notes-mode
+(define-minor-mode bibtex-completion-notes-mode
   "Minor mode for managing notes."
   :keymap (let ((map (make-sparse-keymap)))
-            (define-key map (kbd "C-c C-c") 'helm-bibtex-exit-notes-buffer)
+            (define-key map (kbd "C-c C-c") 'bibtex-completion-exit-notes-buffer)
             (define-key map (kbd "C-c C-w") 'org-refile)
             map)
   (setq-local
    header-line-format
    (substitute-command-keys
-    " Finish \\[helm-bibtex-exit-notes-buffer], refile \\[org-refile]")))
+    " Finish \\[bibtex-completion-exit-notes-buffer], refile \\[org-refile]")))
 
 ;; Define global minor mode. This is needed to the toggle minor mode.
-(define-globalized-minor-mode helm-bibtex-notes-global-mode helm-bibtex-notes-mode helm-bibtex-notes-mode)
+(define-globalized-minor-mode bibtex-completion-notes-global-mode bibtex-completion-notes-mode bibtex-completion-notes-mode)
 
-(defun helm-bibtex-exit-notes-buffer ()
+(defun bibtex-completion-exit-notes-buffer ()
   "Exit notes buffer and delete its window.
-This will also disable `helm-bibtex-notes-mode' and remove the header
+This will also disable `bibtex-completion-notes-mode' and remove the header
 line."
   (interactive)
   (widen)
-  (helm-bibtex-notes-global-mode -1)
+  (bibtex-completion-notes-global-mode -1)
   (setq-local
    header-line-format nil)
   (save-buffer)
-  (let ((window (get-buffer-window (file-name-nondirectory helm-bibtex-notes-path))))
+  (let ((window (get-buffer-window (file-name-nondirectory bibtex-completion-notes-path))))
     (if (and window (not (one-window-p window)))
         (delete-window window)
       (switch-to-buffer (other-buffer)))))
 
-(defun helm-bibtex-edit-notes (key)
+(defun bibtex-completion-edit-notes (key)
   "Open the notes associated with the entry using `find-file'."
-  (if (f-directory? helm-bibtex-notes-path)
+  (if (f-directory? bibtex-completion-notes-path)
                                         ; One notes file per publication:
-      (let ((path (f-join helm-bibtex-notes-path
-                          (s-concat key helm-bibtex-notes-extension))))
+      (let ((path (f-join bibtex-completion-notes-path
+                          (s-concat key bibtex-completion-notes-extension))))
         (find-file path)
         (unless (f-exists? path)
-          (insert (s-format helm-bibtex-notes-template-multiple-files
-                            'helm-bibtex-apa-get-value
-                            (helm-bibtex-get-entry key)))))
+          (insert (s-format bibtex-completion-notes-template-multiple-files
+                            'bibtex-completion-apa-get-value
+                            (bibtex-completion-get-entry key)))))
                                         ; One file for all notes:
     (unless (and buffer-file-name
-                 (f-same? helm-bibtex-notes-path buffer-file-name))
-      (find-file-other-window helm-bibtex-notes-path))
+                 (f-same? bibtex-completion-notes-path buffer-file-name))
+      (find-file-other-window bibtex-completion-notes-path))
     (widen)
     (show-all)
     (goto-char (point-min))
-    (if (re-search-forward (format helm-bibtex-notes-key-pattern key) nil t)
+    (if (re-search-forward (format bibtex-completion-notes-key-pattern key) nil t)
                                         ; Existing entry found:
         (when (eq major-mode 'org-mode)
           (org-narrow-to-subtree)
           (re-search-backward "^\*+ " nil t)
           (org-cycle-hide-drawers nil)
-          (helm-bibtex-notes-mode 1))
+          (bibtex-completion-notes-mode 1))
                                         ; Create a new entry:
-      (let ((entry (helm-bibtex-get-entry key)))
+      (let ((entry (bibtex-completion-get-entry key)))
         (goto-char (point-max))
-        (insert (s-format helm-bibtex-notes-template-one-file
-                          'helm-bibtex-apa-get-value
+        (insert (s-format bibtex-completion-notes-template-one-file
+                          'bibtex-completion-apa-get-value
                           entry)))
       (when (eq major-mode 'org-mode)
         (org-narrow-to-subtree)
         (re-search-backward "^\*+ " nil t)
         (org-cycle-hide-drawers nil)
         (goto-char (point-max))
-        (helm-bibtex-notes-mode 1)))))
+        (bibtex-completion-notes-mode 1)))))
 
-(defun helm-bibtex-buffer-visiting (file)
+(defun bibtex-completion-buffer-visiting (file)
   (or (get-file-buffer file)
       (find-buffer-visiting file)))
 
-(defun helm-bibtex-show-entry (key)
+(defun bibtex-completion-show-entry (key)
   "Show the entry in the BibTeX file."
   (catch 'break
-    (dolist (bibtex-file (-flatten (list helm-bibtex-bibliography)))
-      (let ((buf (helm-bibtex-buffer-visiting bibtex-file)))
+    (dolist (bibtex-file (-flatten (list bibtex-completion-bibliography)))
+      (let ((buf (bibtex-completion-buffer-visiting bibtex-file)))
         (find-file bibtex-file)
         (goto-char (point-min))
         (if (re-search-forward
@@ -1022,9 +1022,9 @@ line."
           (unless buf
             (kill-buffer)))))))
 
-(defun helm-bibtex-fallback-action (url-or-function)
+(defun bibtex-completion-fallback-action (url-or-function)
   (let ((browse-url-browser-function
-          (or helm-bibtex-browser-function
+          (or bibtex-completion-browser-function
               browse-url-browser-function)))
     (cond
       ((stringp url-or-function)
@@ -1033,16 +1033,16 @@ line."
         (funcall url-or-function))
       (t (error "Don't know how to interpret this: %s" url-or-function)))))
 
-(defun helm-bibtex-fallback-candidates ()
+(defun bibtex-completion-fallback-candidates ()
   "Compile list of fallback options.  These consist of the online
-resources defined in `helm-bibtex-fallback-options' plus one
+resources defined in `bibtex-completion-fallback-options' plus one
 entry for each BibTeX file that will open that file for editing."
-  (let ((bib-files (-flatten (list helm-bibtex-bibliography))))
+  (let ((bib-files (-flatten (list bibtex-completion-bibliography))))
     (-concat
      (--map (cons (s-concat "Create new entry in " (f-filename it))
                   `(lambda () (find-file ,it) (goto-char (point-max)) (newline)))
             bib-files)
-     helm-bibtex-fallback-options)))
+     bibtex-completion-fallback-options)))
 
 
 ;; The following allows people to continue using their old helm-bibtex
@@ -1060,7 +1060,7 @@ entry for each BibTeX file that will open that file for editing."
               "cite-prompt-for-optional-arguments"
               "cite-default-as-initial-input" "pdf-field")
  for oldvar = (intern (concat "helm-bibtex-" var))
- for newvar = (intern (concat "helm-bibtex-" var))
+ for newvar = (intern (concat "bibtex-completion-" var))
  do
  (defvaralias newvar oldvar)
  (make-obsolete-variable oldvar newvar "2016-03-20"))
@@ -1092,37 +1092,37 @@ nil, the window will split below."
 
 (defun helm-bibtex-candidates-formatter (candidates _)
   (let ((width (with-helm-window (helm-bibtex-window-width))))
-    (helm-bibtex-candidates-formatter-default candidates width)))
+    (bibtex-completion-candidates-formatter candidates width)))
 
 
 ;; Helm sources:
 (defvar helm-source-bibtex
   (helm-build-sync-source "BibTeX entries"
-    :init 'helm-bibtex-init
-    :candidates 'helm-bibtex-candidates
+    :init 'bibtex-completion-init
+    :candidates 'bibtex-completion-candidates
     :filtered-candidate-transformer 'helm-bibtex-candidates-formatter
     :action (helm-make-actions
-             "Open PDF in Emacs"   'helm-bibtex-open-pdf
-             "Open PDF in Zathura" 'helm-bibtex-open-pdf-zathura
-             "Open PDF in Okular"  'helm-bibtex-open-pdf-okular
-             "Insert citation"     'helm-bibtex-insert-citation
-             "Insert reference"    'helm-bibtex-insert-reference
-             "Insert BibTeX key"   'helm-bibtex-insert-key
-             "Insert BibTeX entry" 'helm-bibtex-insert-bibtex
-             "Copy Bibtex entry"   'helm-bibtex-copy-bibtex
-             "Send PDF to Dropbox" 'helm-bibtex-send-pdf-dropbox
-             "Edit notes"          'helm-bibtex-edit-notes
-             "Show entry"          'helm-bibtex-show-entry)
+             "Open PDF in Emacs"   'bibtex-completion-open-pdf
+             "Open PDF in Zathura" 'bibtex-completion-open-pdf-zathura
+             "Open PDF in Okular"  'bibtex-completion-open-pdf-okular
+             "Insert citation"     'bibtex-completion-insert-citation
+             "Insert reference"    'bibtex-completion-insert-reference
+             "Insert BibTeX key"   'bibtex-completion-insert-key
+             "Insert BibTeX entry" 'bibtex-completion-insert-bibtex
+             "Copy Bibtex entry"   'bibtex-completion-copy-bibtex
+             "Send PDF to Dropbox" 'bibtex-completion-send-pdf-dropbox
+             "Edit notes"          'bibtex-completion-edit-notes
+             "Show entry"          'bibtex-completion-show-entry)
     :fuzzy-match)
   "Source for searching in BibTeX files.")
 
 (defvar helm-source-fallback-options
   '((name            . "Fallback options")
     (match             (lambda (_candidate) t))
-    (candidates      . helm-bibtex-fallback-candidates)
+    (candidates      . bibtex-completion-fallback-candidates)
     (no-matchplugin)
     (nohighlight)
-    (action          . helm-bibtex-fallback-action))
+    (action          . bibtex-completion-fallback-action))
   "Source for online look-up.")
 
 ;; Helm-bibtex command:
@@ -1135,7 +1135,7 @@ With a prefix ARG, the cache is invalidated and the bibliography
 reread."
   (interactive "P")
   (when arg
-    (setq helm-bibtex-bibliography-hash ""))
+    (setq bibtex-completion-bibliography-hash ""))
   (helm :sources helm-source-bibtex
         :full-frame helm-bibtex-full-frame
         :buffer "*helm bibtex*"
