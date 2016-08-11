@@ -450,7 +450,7 @@ appended to the requested entry."
 (defun bibtex-completion-prepare-entries (entries)
   "Do some preprocessing of the entries."
   (cl-loop
-   with fields = (append '("title" "year" "crossref")
+   with fields = (append '("title" "year" "keywords" "groups" "booktitle" "journal" "comment")
                          (-map (lambda (it) (if (symbolp it) (symbol-name it) it))
                                bibtex-completion-additional-search-fields))
    for entry in entries
