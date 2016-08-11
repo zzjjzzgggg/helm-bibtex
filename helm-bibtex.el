@@ -377,7 +377,7 @@ before being saved."
                    (string= bibtex-completion-bibliography-hash bibliography-hash))
         (message "Loading bibliography ...")
         (let* ((entries (bibtex-completion-parse-bibliography))
-               (entries (bibtex-completion-resolve-crossrefs entries))
+               ;;(entries (bibtex-completion-resolve-crossrefs entries))
                (entries (bibtex-completion-prepare-entries entries))
                (entries
                 (--map (cons (bibtex-completion-clean-string
