@@ -1101,6 +1101,7 @@ nil, the window will split below."
     :init 'bibtex-completion-init
     :candidates 'bibtex-completion-candidates
     :filtered-candidate-transformer 'helm-bibtex-candidates-formatter
+    :fuzzy-match nil
     :action (helm-make-actions
              "Open PDF in Emacs"   'bibtex-completion-open-pdf
              "Open PDF in Zathura" 'bibtex-completion-open-pdf-zathura
@@ -1112,8 +1113,7 @@ nil, the window will split below."
              "Copy Bibtex entry"   'bibtex-completion-copy-bibtex
              "Send PDF to Dropbox" 'bibtex-completion-send-pdf-dropbox
              "Edit notes"          'bibtex-completion-edit-notes
-             "Show entry"          'bibtex-completion-show-entry)
-    :fuzzy-match)
+             "Show entry"          'bibtex-completion-show-entry))
   "Source for searching in BibTeX files.")
 
 (defvar helm-source-fallback-options
