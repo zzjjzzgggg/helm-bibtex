@@ -3,6 +3,7 @@
 ;; Author: Titus von der Malsburg <malsburg@posteo.de>
 ;; Maintainer: Titus von der Malsburg <malsburg@posteo.de>
 ;; Version: 2.0.0
+;; Package-Version: 20160823.2307
 ;; Package-Requires: ((helm "1.5.5") (parsebib "1.0") (s "1.9.0") (dash "2.6.0") (f "0.16.2") (cl-lib "0.5") (biblio "0.2"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -486,10 +487,6 @@ file is specified, or if the specified file does not exist, or if
                            (list path)                 ; Absolute Windows path
                                                        ; Something else:
                          (append
-                          (list
-                           path
-                           (f-join (f-root) path) ; Mendeley #105
-                           (f-join (f-root) path file-name)) ; Mendeley #105
                           (--map (f-join it path)
                                  (-flatten bibtex-completion-library-path)) ; Jabref #100
                           (--map (f-join it path file-name)
