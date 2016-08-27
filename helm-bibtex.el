@@ -3,7 +3,8 @@
 ;; Author: Titus von der Malsburg <malsburg@posteo.de>
 ;; Maintainer: Titus von der Malsburg <malsburg@posteo.de>
 ;; Version: 2.0.0
-;; Package-Version: 20160823.2307
+;; Package-Version: 20160824.939
+;; Package-X-Original-Version: 20160823.2307
 ;; Package-Requires: ((helm "1.5.5") (parsebib "1.0") (s "1.9.0") (dash "2.6.0") (f "0.16.2") (cl-lib "0.5") (biblio "0.2"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -483,14 +484,7 @@ file is specified, or if the specified file does not exist, or if
            for record = (s-split "\^_" record)
            for file-name = (nth 0 record)
            for path = (or (nth 1 record) "")
-           for paths = (if (s-match "^[A-Z]:" path)
-                           (list path)                 ; Absolute Windows path
-                                                       ; Something else:
-                         (append
-                          (--map (f-join it path)
-                                 (-flatten bibtex-completion-library-path)) ; Jabref #100
-                          (--map (f-join it path file-name)
-                                 (-flatten bibtex-completion-library-path)))) ; Jabref #100
+           for paths = (--map (f-join it path) (-flatten bibtex-completion-library-path))
            for result = (-first 'f-exists? paths)
            if result collect result)))))))
 
