@@ -3,7 +3,8 @@
 ;; Author: Titus von der Malsburg <malsburg@posteo.de>
 ;; Maintainer: Titus von der Malsburg <malsburg@posteo.de>
 ;; Version: 2.0.0
-;; Package-Version: 20160824.939
+;; Package-Version: 20160827.931
+;; Package-X-Original-Version: 20160824.939
 ;; Package-X-Original-Version: 20160823.2307
 ;; Package-Requires: ((helm "1.5.5") (parsebib "1.0") (s "1.9.0") (dash "2.6.0") (f "0.16.2") (cl-lib "0.5") (biblio "0.2"))
 
@@ -469,10 +470,7 @@ file is specified, or if the specified file does not exist, or if
                       (bibtex-completion-get-entry1 key-or-entry t)
                     key-or-entry))
            (value (bibtex-completion-get-value bibtex-completion-pdf-field entry)))
-      (cond
-       ((not value) nil)         ; Field not defined.
-       ((f-file? value) value)   ; A bare full path was found.
-       (t                        ; Zotero/Mendeley/JabRef format:
+      (if (not value) nil         ; Field not defined.
         (let ((value (replace-regexp-in-string "\\([^\\]\\);" "\\1\^^" value)))
           (cl-loop  ; Looping over the files:
            for record in (s-split "\^^" value)
@@ -485,8 +483,9 @@ file is specified, or if the specified file does not exist, or if
            for file-name = (nth 0 record)
            for path = (or (nth 1 record) "")
            for paths = (--map (f-join it path) (-flatten bibtex-completion-library-path))
-           for result = (-first 'f-exists? paths)
-           if result collect result)))))))
+           ;; for result = (-first 'f-exists? paths)
+           for result = (nth 0 paths)
+           if result collect result))))))
 
 (defun bibtex-completion-find-pdf-in-library (key-or-entry)
   "Searches the directories in `bibtex-completion-library-path' for a
@@ -565,7 +564,6 @@ find a PDF file."
                             :test (lambda (x y) (string= (s-downcase x) (s-downcase y)))
                             :key 'car :from-end t))))
 
-
 
 (defun bibtex-completion-candidates-formatter (candidates width)
   "Formats BibTeX entries for display in results list."
@@ -589,7 +587,6 @@ find a PDF file."
                               fields (list 14 (- width 36) 4 1 1 1 10)))
          entry-key)))
 
-
 (defun bibtex-completion-clean-string (s)
   "Removes quoting and superfluous white space from BibTeX field
 values."
