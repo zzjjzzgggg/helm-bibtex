@@ -3,7 +3,8 @@
 ;; Author: Titus von der Malsburg <malsburg@posteo.de>
 ;; Maintainer: Titus von der Malsburg <malsburg@posteo.de>
 ;; Version: 2.0.0
-;; Package-Version: 20160827.931
+;; Package-Version: 20160925.1025
+;; Package-X-Original-Version: 20160827.931
 ;; Package-X-Original-Version: 20160824.939
 ;; Package-X-Original-Version: 20160823.2307
 ;; Package-Requires: ((helm "1.5.5") (parsebib "1.0") (s "1.9.0") (dash "2.6.0") (f "0.16.2") (cl-lib "0.5") (biblio "0.2"))
@@ -1094,14 +1095,16 @@ nil, the window will split below."
              "Open PDF in Emacs"   'bibtex-completion-open-pdf
              "Open PDF in Zathura" 'bibtex-completion-open-pdf-zathura
              "Open PDF in Okular"  'bibtex-completion-open-pdf-okular
-             "Insert citation"     'bibtex-completion-insert-citation
-             "Insert reference"    'bibtex-completion-insert-reference
-             "Insert BibTeX key"   'bibtex-completion-insert-key
-             "Insert BibTeX entry" 'bibtex-completion-insert-bibtex
              "Copy Bibtex entry"   'bibtex-completion-copy-bibtex
              "Send PDF to Dropbox" 'bibtex-completion-send-pdf-dropbox
              "Edit notes"          'bibtex-completion-edit-notes
-             "Show entry"          'bibtex-completion-show-entry))
+             "Show entry"          'bibtex-completion-show-entry
+             "Attach PDF to Email" 'bibtex-completion-add-PDF-attachment
+             ;; "Insert citation"     'bibtex-completion-insert-citation
+             ;; "Insert reference"    'bibtex-completion-insert-reference
+             ;; "Insert BibTeX key"   'bibtex-completion-insert-key
+             ;; "Insert BibTeX entry" 'bibtex-completion-insert-bibtex
+             ))
   "Source for searching in BibTeX files.")
 
 (defvar helm-source-fallback-options
