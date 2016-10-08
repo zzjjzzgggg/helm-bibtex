@@ -917,7 +917,7 @@ defined.  Surrounding curly braces are stripped."
     (message "No PDF(s) found.")))
 
 (defun bibtex-completion-send-pdf-dropbox (candidates)
-  "Attach the PDFs of the selected entries where available."
+  "Copy the PDFs of the selected entries to Dropbox."
   (--if-let
       (-flatten
        (-map 'bibtex-completion-find-pdf
@@ -1097,9 +1097,9 @@ nil, the window will split below."
              "Open PDF in Okular"  'bibtex-completion-open-pdf-okular
              "Copy Bibtex entry"   'bibtex-completion-copy-bibtex
              "Send PDF to Dropbox" 'bibtex-completion-send-pdf-dropbox
+             "Attach PDF to Email" 'bibtex-completion-add-PDF-attachment
              "Edit notes"          'bibtex-completion-edit-notes
              "Show entry"          'bibtex-completion-show-entry
-             "Attach PDF to Email" 'bibtex-completion-add-PDF-attachment
              ;; "Insert citation"     'bibtex-completion-insert-citation
              ;; "Insert reference"    'bibtex-completion-insert-reference
              ;; "Insert BibTeX key"   'bibtex-completion-insert-key
