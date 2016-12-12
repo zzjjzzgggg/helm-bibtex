@@ -1132,10 +1132,9 @@ reread."
         :buffer "*helm bibtex*"
         :candidate-number-limit 100))
 
-
-
 (defun helm-bibtex-good-work (&optional arg)
-  "Search BibTeX entries with comment “GoodWork”.
+  "Search BibTeX entries having “GoodWork” in comment field.
+
 With a prefix ARG, the cache is invalidated and the bibliography reread."
   (interactive "P")
   (when arg (bibtex-completion-clear-cache))
