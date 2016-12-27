@@ -1132,21 +1132,6 @@ reread."
         :buffer "*helm bibtex*"
         :candidate-number-limit 100))
 
-(defun helm-bibtex-good-work (&optional arg)
-  "Search BibTeX entries having “GoodWork” in comment field.
-
-With a prefix ARG, the cache is invalidated and the bibliography reread."
-  (interactive "P")
-  (when arg (bibtex-completion-clear-cache))
-  (helm :sources (list helm-source-bibtex)
-        :full-frame helm-bibtex-full-frame
-        :buffer "*helm bibtex*"
-        :input "GoodWork"
-        :candidate-number-limit 100))
-
-;; Bind this search function to Ctrl-x p:
-(global-set-key (kbd "C-x p") 'helm-bibtex-good-work)
-
 
 (provide 'helm-bibtex)
 
