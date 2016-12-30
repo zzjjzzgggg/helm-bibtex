@@ -1130,7 +1130,7 @@ reread."
   (helm :sources helm-source-bibtex
         :full-frame helm-bibtex-full-frame
         :buffer "*helm bibtex*"
-        :candidate-number-limit 100))
+        :candidate-number-limit 200))
 
 
 (provide 'helm-bibtex)
