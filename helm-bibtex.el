@@ -3,7 +3,8 @@
 ;; Author: Titus von der Malsburg <malsburg@posteo.de>
 ;; Maintainer: Titus von der Malsburg <malsburg@posteo.de>
 ;; Version: 2.0.0
-;; Package-Version: 20160925.1025
+;; Package-Version: 20161230.1745
+;; Package-X-Original-Version: 20160925.1025
 ;; Package-X-Original-Version: 20160827.931
 ;; Package-X-Original-Version: 20160824.939
 ;; Package-X-Original-Version: 20160823.2307
@@ -893,7 +894,7 @@ defined.  Surrounding curly braces are stripped."
   (let* ((entry (bibtex-completion-get-entry key))
          (entry-type (bibtex-completion-get-value "=type=" entry)))
     (format "@%s{%s,\n%s}\n"
-            entry-type key
+            (capitalize entry-type) key
             (cl-loop
              for field in entry
              for name = (car field)
