@@ -1,14 +1,10 @@
-;;; helm-bibtex.el --- A BibTeX bibliography manager based on Helm
+;;; bibtex-completion.el --- A BibTeX backend for completion frameworks
 
 ;; Author: Titus von der Malsburg <malsburg@posteo.de>
+;;         Justin Burkett <justin@burkett.cc>
 ;; Maintainer: Titus von der Malsburg <malsburg@posteo.de>
-;; Version: 2.0.0
-;; Package-Version: 20161230.1745
-;; Package-X-Original-Version: 20160925.1025
-;; Package-X-Original-Version: 20160827.931
-;; Package-X-Original-Version: 20160824.939
-;; Package-X-Original-Version: 20160823.2307
-;; Package-Requires: ((helm "1.5.5") (parsebib "1.0") (s "1.9.0") (dash "2.6.0") (f "0.16.2") (cl-lib "0.5") (biblio "0.2"))
+;; Version: 1.0.0
+;; Package-Requires: ((parsebib "1.0") (s "1.9.0") (dash "2.6.0") (f "0.16.2") (cl-lib "0.5"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -25,76 +21,13 @@
 
 ;;; Commentary:
 
-;; A BibTeX bibliography manager based on Helm and the
-;; bibtex-completion backend
-;;
-;; News:
-;; - 04/18/2016: Improved support for Mendely/Jabref/Zotero way of
-;;   referencing PDFs.
-;; - 04/06/2016: Generic functions are factored out into a backend for
-;;   use with other completion frameworks like ivy.
-;; - 04/02/2016: Added support for biblio.el which is useful for
-;;   importing BibTeX from CrossRef and other sources.  See new
-;;   fallback options and the section "Importing BibTeX from CrossRef"
-;;   on the GitHub page.
-;; - 02/25/2016: Support for pre- and postnotes for pandoc-citeproc
-;;   citations.
-;; - 11/23/2015: Added support for keeping all notes in one
-;;   org-file.  See customization variable `bibtex-completion-notes-path'.
-;; - 11/10/2015: Added support for PDFs specified in a BibTeX
-;;   field.  See customization variable `bibtex-completion-pdf-field'.
-;; - 11/09/2015: Improved insertion of LaTeX cite commands.
-;;
-;; See NEWS.org for old news.
-;;
-;; Key features:
-;; - Quick access to your bibliography from within Emacs
-;; - Tightly integrated workflows
-;; - Provides instant search results as you type
-;; - Powerful search expressions
-;; - Open the PDFs, URLs, or DOIs associated with an entry
-;; - Insert LaTeX cite commands, Ebib links, or Pandoc citations,
-;;   BibTeX entries, or plain text references at point, attach PDFs to
-;;   emails
-;; - Attach notes to publications
-;; - Quick access to online bibliographic databases such as Pubmed,
-;;   arXiv, Google Scholar, Library of Congress, etc.
-;; - Import BibTeX entries from CrossRef and other sources.
+;; A BibTeX backend for completion frameworks
+
+;; There are currently two fronends: helm-bibtex and ivy-bibtex.
 ;;
 ;; See the github page for details:
 ;;
 ;;    https://github.com/tmalsburg/helm-bibtex
-
-;;; Install:
-
-;; Put this file in a directory included in your load path or install
-;; helm-bibtex from MELPA (preferred).  Then add the following in your
-;; Emacs startup file:
-;;
-;;     (require 'helm-bibtex)
-;;
-;; Alternatively, you can use autoload:
-;;
-;;     (autoload 'helm-bibtex "helm-bibtex" "" t)
-;;
-;; Requirements are parsebib, helm, s, dash, and f.  The easiest way
-;; to install these packages is through MELPA.  Make sure helm is
-;; properly configured (see
-;; https://github.com/emacs-helm/helm#install-from-emacs-packaging-system).
-;;
-;; Let helm-bibtex know where it can find your bibliography by setting
-;; the variable `bibtex-completion-bibliography'.  See the manual for
-;; more details:
-;;
-;;   https://github.com/tmalsburg/helm-bibtex#minimal-configuration
-
-;;; Usage:
-
-;; You can search entries using the command `helm-bibtex'.  Select an
-;; entry and press TAB to access all available actions.  At the end of
-;; the list of matches you find some dummy entries that can be used
-;; for searching in online databases.  Apart from that, familiarize
-;; yourself with Helm.  It's more powerful that you might think.
 
 ;;; Code:
 
@@ -104,13 +37,18 @@
 (require 'dash)
 (require 's)
 (require 'f)
+(require 'biblio)
 
 (defgroup bibtex-completion nil
   "Helm plugin for searching entries in a BibTeX bibliography."
   :group 'completion)
 
 (defcustom bibtex-completion-bibliography nil
-  "The BibTeX file or list of BibTeX files."
+  "The BibTeX file or list of BibTeX files. Org-bibtex users can
+also specify org-mode bibliography files, in which case it will
+be assumed that a BibTeX file exists with the same name and
+extension bib instead of org. If the bib file has a different
+name, use a cons cell (\"orgfile.org\" . \"bibfile.bib\") instead."
   :group 'bibtex-completion
   :type '(choice file (repeat file)))
 
@@ -206,13 +144,13 @@ should be a single character."
 
 (defcustom bibtex-completion-fallback-options
   '(("CrossRef                                  (biblio.el)"
-     . (lambda () (biblio-lookup #'biblio-crossref-backend helm-pattern)))
+     . (lambda (search-expression) (biblio-lookup #'biblio-crossref-backend search-expression)))
     ("arXiv                                     (biblio.el)"
-     . (lambda () (biblio-lookup #'biblio-arxiv-backend helm-pattern)))
+     . (lambda (search-expression) (biblio-lookup #'biblio-arxiv-backend search-expression)))
     ("DBLP (computer science bibliography)      (biblio.el)"
-     . (lambda () (biblio--lookup-1 #'biblio-dblp-backend helm-pattern)))
+     . (lambda (search-expression) (biblio--lookup-1 #'biblio-dblp-backend search-expression)))
     ("HAL (French open archive)                 (biblio.el)"
-     . (lambda () (biblio--lookup-1 #'biblio-hal-backend helm-pattern)))
+     . (lambda (search-expression) (biblio--lookup-1 #'biblio-hal-backend search-expression)))
     ("Google Scholar                            (web)"
      . "https://scholar.google.co.uk/scholar?q=%s")
     ("Pubmed                                    (web)"
@@ -340,6 +278,42 @@ the directories listed in `bibtex-completion-library-path'."
   :group 'bibtex-completion
   :type 'string)
 
+(defcustom bibtex-completion-display-formats
+  '((t . "${author:36} ${title:*} ${year:4} ${=has-pdf=:1}${=has-note=:1} ${=type=:7}"))
+  "Alist of format strings for displaying entries in the results list.
+The key of each element of this list is either a BibTeX entry
+type (in which case the format string applies to entries of this
+type only) or t (in which case the format string applies to all
+other entry types). The value is the format string.
+
+In the format string, expressions like \"${author:36}\",
+\"${title:*}\", etc, are expanded to the value of the
+corresponding field. An expression like \"${author:N}\" is
+truncated to a width of N characters, whereas an expression like
+\"${title:*}\" is truncated to the remaining width in the results
+window. Three special fields are available: \"=type=\" holds the
+BibTeX entry type, \"=has-pdf=\" holds
+`bibtex-completion-pdf-symbol' if the entry has a PDF file, and
+\"=has-notes=\" holds `bibtex-completion-notes-symbol' if the
+entry has a notes file. The \"author\" field is expanded to
+either the author names or, if the entry has no author field, the
+editor names."
+  :group 'bibtex-completion
+  :type '(alist :key-type symbol :value-type string))
+
+(defvar bibtex-completion-display-formats-internal nil
+  "Stores `bibtex-completion-display-formats' together with the
+\"used width\" of each format string. This is set internally.")
+
+(defvar bibtex-completion-cache nil
+  "A cache storing the hash of the bibliography content and the
+corresponding list of entries, for each bibliography file,
+obtained when the bibliography was last parsed. When the
+current bibliography hash is identical to the cached hash, the
+cached list of candidates is reused, otherwise the bibliography
+file is reparsed.")
+
+
 (defvar bibtex-completion-bibliography-hash nil
   "The hash of the content of the configured bibliography
 files.  If this hash has not changed since the bibliography was
@@ -351,6 +325,28 @@ used.")
 bibliography files were last parsed.")
 
 
+(defun bibtex-completion-normalize-bibliography (&optional type)
+  "Returns a list of bibliography file(s) in
+`bibtex-completion-bibliography'. If there are org-mode
+bibliography-files, their corresponding bibtex files are listed
+as well, unless TYPE is 'main. If TYPE is 'bibtex, org-mode
+bibliography-files are instead replaced with their associated
+bibtex files."
+  (delete-dups
+   (cl-loop
+    for bib-file in (-flatten (list bibtex-completion-bibliography))
+    for main-file = (if (consp bib-file)
+                        (car bib-file)
+                      bib-file)
+    for bibtex-file = (if (consp bib-file)
+                          (cdr bib-file)
+                        (concat (file-name-sans-extension main-file) ".bib"))
+    unless (equal type 'bibtex)
+    collect main-file
+    unless (equal type 'main)
+    collect bibtex-file)))
+
+
 (defun bibtex-completion-init ()
   "Checks that the files and directories specified by the user
 actually exist."
