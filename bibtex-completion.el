@@ -1068,8 +1068,7 @@ defined.  Surrounding curly braces are stripped."
                             (append (-map (lambda (it) (if (symbolp it) (symbol-name it) it))
                                           bibtex-completion-no-export-fields)
                                     '("=type=" "=key=" "=has-pdf=" "=has-note=" "crossref"
-                                      "=venue=" "=comment=" "keywords" "file" "owner" "timestamp"
-                                      "__markedentry" "groups" "comment")))
+                                      "=venue=" "=comment=")))
              concat
              (format "  %s = %s,\n" name value)))))
 
