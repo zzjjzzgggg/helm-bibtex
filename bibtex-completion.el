@@ -401,10 +401,9 @@ is the entry (only the fields listed above) as an alist."
       (message "Resolving cross-references ...")
       (bibtex-completion-resolve-crossrefs files reparsed-files))
     ;; Finally return the list of candidates:
-    (nreverse
      (cl-loop
       for file in files
-      append (cddr (assoc file bibtex-completion-cache))))))
+      append (cddr (assoc file bibtex-completion-cache)))))
 
 (defun bibtex-completion-resolve-crossrefs (files reparsed-files)
   "Expand all entries with fields from cross-referenced entries
@@ -487,7 +486,7 @@ return a list of entries in the order in which they appeared in
 the BibTeX file. Also do some preprocessing of the entries."
   (goto-char (point-min))
   (cl-loop
-   with fields = (append '("title" "year" "crossref")
+   with fields = (append '("title" "year")
                          (-map (lambda (it) (if (symbolp it) (symbol-name it) it))
                                bibtex-completion-additional-search-fields))
    for entry-type = (parsebib-find-next-item)
@@ -675,7 +674,6 @@ the variable `bibtex-completion-display-formats'."
               (- width (cddr format)))
             0 ?\s)))))))
 
-
 (defun bibtex-completion-clean-string (s)
   "Removes quoting and superfluous white space from BibTeX field
 values."
@@ -696,7 +694,6 @@ values."
                concat (car p))
     nil))
 
-
 (defun bibtex-completion-open-pdf (keys)
   "Open the PDFs associated with the marked entries using the
 function specified in `bibtex-completion-pdf-open-function'.  All paths
