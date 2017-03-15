@@ -113,7 +113,7 @@ to ACTION."
 (ivy-bibtex-ivify-action bibtex-completion-send-to-dropbox ivy-bibtex-send-to-dropbox)
 (ivy-bibtex-ivify-action bibtex-completion-add-PDF-attachment ivy-bibtex-add-PDF-attachment)
 (ivy-bibtex-ivify-action bibtex-completion-edit-notes ivy-bibtex-edit-notes)
-(ivy-bibtex-ivify-action bibtex-completion-show-entry ivy-bibtex-show-entry)
+(ivy-bibtex-ivify-action bibtex-completion-show-entry ivy-bibtex-edit-entry)
 (ivy-bibtex-ivify-action bibtex-completion-add-pdf-to-library ivy-bibtex-add-pdf-to-library)
 
 (defun ivy-bibtex-fallback (search-expression)
@@ -160,10 +160,10 @@ reread."
    ("z" ivy-bibtex-open-pdf-zathura "Open PDF in zathura")
    ("o" ivy-bibtex-open-pdf-okular "Open PDF in Okular")
    ("c" ivy-bibtex-copy-bibtex "Copy bibtex entry")
-   ("d" ivy-bibtex-send-to-dropbox "Send PDF to Dropbox")
+   ("b" ivy-bibtex-send-to-dropbox "Send PDF to Dropbox")
    ("a" ivy-bibtex-add-PDF-attachment "Attach PDF to email")
-   ("e" ivy-bibtex-edit-notes "Edit notes")
-   ("s" ivy-bibtex-show-entry "Show entry")
+   ("e" ivy-bibtex-edit-entry "Show entry")
+   ("n" ivy-bibtex-edit-notes "Edit notes")
    ("f" (lambda (_candidate) (ivy-bibtex-fallback ivy-text)) "Fallback options")))
 
 (provide 'ivy-bibtex)
