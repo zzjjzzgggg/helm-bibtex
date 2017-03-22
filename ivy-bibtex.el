@@ -158,7 +158,7 @@ reread."
  'ivy-bibtex
  '(("p" ivy-bibtex-open-pdf "Open PDF in Emacs")
    ("z" ivy-bibtex-open-pdf-zathura "Open PDF in zathura")
-   ("o" ivy-bibtex-open-pdf-okular "Open PDF in Okular")
+   ("k" ivy-bibtex-open-pdf-okular "Open PDF in Okular")
    ("c" ivy-bibtex-copy-bibtex "Copy bibtex entry")
    ("b" ivy-bibtex-send-to-dropbox "Send PDF to Dropbox")
    ("a" ivy-bibtex-add-PDF-attachment "Attach PDF to email")
