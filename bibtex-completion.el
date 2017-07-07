@@ -279,7 +279,7 @@ the directories listed in `bibtex-completion-library-path'."
   :type 'string)
 
 (defcustom bibtex-completion-display-formats
-  '((t . "${author:36} ${title:*} ${year:4} ${=has-pdf=:1}${=has-note=:1} ${=type=:7}"))
+  '((t . "${author:36} ${title:*} ${year:4} ${=has-note=:1} ${=type=:7}"))
   "Alist of format strings for displaying entries in the results list.
 The key of each element of this list is either a BibTeX entry
 type (in which case the format string applies to entries of this
@@ -587,11 +587,8 @@ fields. If FIELDS is empty, all fields are kept. Also add a
 DO-NOT-FIND-PDF is non-nil, this function does not attempt to
 find a PDF file."
   (when entry ; entry may be nil, in which case just return nil
-    (let* ((fields (when fields (append fields (list "=venue=" "=comment=" "=type=" "=key=" "=has-pdf=" "=has-note="))))
-           ; Check for PDF:
-           (entry (if (and (not do-not-find-pdf) (bibtex-completion-find-pdf entry))
-                      (cons (cons "=has-pdf=" bibtex-completion-pdf-symbol) entry)
-                    entry))
+    (let* ((fields (when fields (append fields (list "=venue=" "=comment=" "=type=" "=key=" "=has-note="))))
+           ;; key
            (entry-key (cdr (assoc "=key=" entry)))
            ;; venue
            (entry (let* ((booktitle (bibtex-completion-get-value "booktitle" entry ""))
@@ -606,23 +603,17 @@ find a PDF file."
                     (if (not (string= "" comment))
                         (cons (cons "=comment=" (substring comment 0 1)) entry)
                       entry)))
+           ;; timestamp
+           ;; (entry (cons (cons "=timestamp=" (bibtex-completion-get-value "timestamp" entry "")) entry))
            ; Check for notes:
-           (entry (if (or
-                       ;; One note file per entry:
-                       (and bibtex-completion-notes-path
-                            (f-directory? bibtex-completion-notes-path)
-                            (f-file? (f-join bibtex-completion-notes-path
-                                             (s-concat entry-key
-                                                       bibtex-completion-notes-extension))))
-                       ;; All notes in one file:
-                       (and bibtex-completion-notes-path
+           (entry (if (and bibtex-completion-notes-path
                             (f-file? bibtex-completion-notes-path)
                             (with-current-buffer (find-file-noselect bibtex-completion-notes-path)
                               (save-excursion
                                 (save-restriction
                                   (widen)
                                   (goto-char (point-min))
-                                  (re-search-forward (format bibtex-completion-notes-key-pattern entry-key) nil t))))))
+                                  (re-search-forward (format bibtex-completion-notes-key-pattern entry-key) nil t)))))
                       (cons (cons "=has-note=" bibtex-completion-notes-symbol) entry)
                     entry))
            ; Remove unwanted fields:
@@ -1064,8 +1055,7 @@ defined.  Surrounding curly braces are stripped."
              unless (member name
                             (append (-map (lambda (it) (if (symbolp it) (symbol-name it) it))
                                           bibtex-completion-no-export-fields)
-                                    '("=type=" "=key=" "=has-pdf=" "=has-note=" "crossref"
-                                      "=venue=" "=comment=")))
+                                    '("=type=" "=key=" "=has-note=" "crossref" "=venue=" "=comment=")))
              concat
              (format "  %s = %s,\n" name value)))))
 
