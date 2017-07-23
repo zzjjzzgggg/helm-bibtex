@@ -6,18 +6,18 @@
 ;; Version: 1.0.0
 ;; Package-Requires: ((parsebib "1.0") (s "1.9.0") (dash "2.6.0") (f "0.16.2") (cl-lib "0.5"))
 
-;; This program is free software; you can redistribute it and/or modify
-;; it under the terms of the GNU General Public License as published by
-;; the Free Software Foundation, either version 3 of the License, or
-;; (at your option) any later version.
+;; This program is free software; you can redistribute it and/or modify it under
+;; the terms of the GNU General Public License as published by the Free Software
+;; Foundation, either version 3 of the License, or (at your option) any later
+;; version.
 
-;; This program is distributed in the hope that it will be useful,
-;; but WITHOUT ANY WARRANTY; without even the implied warranty of
-;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-;; GNU General Public License for more details.
+;; This program is distributed in the hope that it will be useful, but WITHOUT
+;; ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+;; FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+;; details.
 
-;; You should have received a copy of the GNU General Public License
-;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+;; You should have received a copy of the GNU General Public License along with
+;; this program. If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -48,7 +48,8 @@
 also specify org-mode bibliography files, in which case it will
 be assumed that a BibTeX file exists with the same name and
 extension bib instead of org. If the bib file has a different
-name, use a cons cell (\"orgfile.org\" . \"bibfile.bib\") instead."
+name, use a cons cell (\"orgfile.org\" . \"bibfile.bib\")
+instead."
   :group 'bibtex-completion
   :type '(choice file (repeat file)))
 
@@ -60,11 +61,11 @@ composed of the BibTeX-key plus a \".pdf\" suffix."
   :type '(choice directory (repeat directory)))
 
 (defcustom bibtex-completion-pdf-open-function 'find-file
-  "The function used for opening PDF files.  This can be an
+  "The function used for opening PDF files. This can be an
 arbitrary function that takes one argument: the path to the PDF
-file.  The default is `find-file' which opens the PDF in
+file. The default is `find-file' which opens the PDF in
 Emacs (either with docview or, if installed, the much superior
-pdf-tools.  When set to `helm-open-file-with-default-tool', the
+pdf-tools. When set to `helm-open-file-with-default-tool', the
 systems default viewer for PDFs is used."
   :group 'bibtex-completion
   :type 'function)
@@ -76,7 +77,7 @@ systems default viewer for PDFs is used."
 
 (defcustom bibtex-completion-pdf-symbol "#"
   "Symbol used to indicate that a PDF file is available for a
-publication.  This should be a single character."
+publication. This should be a single character."
   :group 'bibtex-completion
   :type 'string)
 
@@ -85,12 +86,12 @@ publication.  This should be a single character."
     (latex-mode    . bibtex-completion-format-citation-cite)
     (markdown-mode . bibtex-completion-format-citation-pandoc-citeproc)
     (default       . bibtex-completion-format-citation-default))
-  "The functions used for formatting citations.  The publication
+  "The functions used for formatting citations. The publication
 can be cited, for example, as \cite{key} or ebib:key depending on
-the major mode of the current buffer.  Note that the functions
-should accept a list of keys as input.  With multiple marked
-entries one can insert multiple keys at once,
-e.g. \cite{key1,key2}. See the functions
+the major mode of the current buffer. Note that the functions
+should accept a list of keys as input. With multiple marked
+entries one can insert multiple keys at once, e.g.
+\cite{key1,key2}. See the functions
 `bibtex-completion-format-citation-ebib' and
 `bibtex-completion-format-citation-cite' as examples."
   :group 'bibtex-completion
@@ -583,7 +584,7 @@ ENTRY is an alist representing an entry as returned by
 parsebib-read-entry. All the fields not in FIELDS are removed
 from ENTRY, with the exception of the \"=type=\" and \"=key=\"
 fields. If FIELDS is empty, all fields are kept. Also add a
-=has-pdf= and/or =has-note= field, if they exist for ENTRY.  If
+=has-pdf= and/or =has-note= field, if they exist for ENTRY. If
 DO-NOT-FIND-PDF is non-nil, this function does not attempt to
 find a PDF file."
   (when entry ; entry may be nil, in which case just return nil
@@ -618,8 +619,8 @@ find a PDF file."
                     entry))
            ; Remove unwanted fields:
            (entry (if fields
-                       (--filter (member-ignore-case (car it) fields) entry)
-                     entry)))
+                      (--filter (member-ignore-case (car it) fields) entry)
+                    entry)))
       ;; Normalize case of entry type:
       (setcdr (assoc "=type=" entry) (downcase (cdr (assoc "=type=" entry))))
       ;; Remove duplicated fields:
