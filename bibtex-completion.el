@@ -720,9 +720,13 @@ matching PDFs for an entry, the first is opened."
     (message "No PDF(s) found.")))
 
 (defun bibtex-completion-copy-bibtex (candidates)
-  "copy BibTeX entry."
-  (let ((keys (if (listp candidates) candidates (list candidates))))
-    (kill-new (s-join "\n" (--map (bibtex-completion-make-bibtex it) keys)))))
+  "copy selected BibTeX entry."
+  (kill-new (bibtex-completion-make-bibtex (pop candidates))))
+
+(defun bibtex-completion-copy-title (candidate)
+  "copy selected BibTeX entry title."
+  (let* ((entry (bibtex-completion-get-entry (pop candidate))))
+    (kill-new (bibtex-completion-get-value "title" entry))))
 
 (defun bibtex-completion-send-to-dropbox (candidates)
   "Copy the PDFs of the selected entries to Dropbox."
