@@ -161,7 +161,7 @@ reread."
    ("z" ivy-bibtex-open-pdf-zathura "Open PDF in zathura")
    ("k" ivy-bibtex-open-pdf-okular "Open PDF in Okular")
    ("c" ivy-bibtex-copy-bibtex "Copy bibtex entry")
-   ("t" ivy-bibtex-copy-title "Copy selected bibtex entry title")
+   ("t" ivy-bibtex-copy-title "Copy entry title")
    ("b" ivy-bibtex-send-to-dropbox "Send PDF to Dropbox")
    ("a" ivy-bibtex-add-PDF-attachment "Attach PDF to email")
    ("e" ivy-bibtex-edit-entry "Show entry")
