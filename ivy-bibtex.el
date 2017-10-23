@@ -157,13 +157,13 @@ reread."
 
 (ivy-set-actions
  'ivy-bibtex
- '(("p" ivy-bibtex-open-pdf "Open PDF in Emacs")
-   ("z" ivy-bibtex-open-pdf-zathura "Open PDF in zathura")
-   ("k" ivy-bibtex-open-pdf-okular "Open PDF in Okular")
-   ("c" ivy-bibtex-copy-bibtex "Copy bibtex entry")
-   ("t" ivy-bibtex-copy-title "Copy entry title")
-   ("b" ivy-bibtex-send-to-dropbox "Send PDF to Dropbox")
-   ("a" ivy-bibtex-add-PDF-attachment "Attach PDF to email")
+ '(("p" ivy-bibtex-open-pdf "Open in Emacs")
+   ("z" ivy-bibtex-open-pdf-zathura "Open in Zathura")
+   ("k" ivy-bibtex-open-pdf-okular "Open in Okular")
+   ("c" ivy-bibtex-copy-bibtex "Copy entry")
+   ("t" ivy-bibtex-copy-title "Copy title")
+   ("b" ivy-bibtex-send-to-dropbox "Send to Dropbox")
+   ("a" ivy-bibtex-add-PDF-attachment "Attach to email")
    ("e" ivy-bibtex-edit-entry "Show entry")
    ("n" ivy-bibtex-edit-notes "Edit notes")
    ("f" (lambda (_candidate) (ivy-bibtex-fallback ivy-text)) "Fallback options")))
