@@ -697,7 +697,7 @@ matching PDFs for an entry, the first is opened."
       (-each it bibtex-completion-pdf-open-function)
     (message "No PDF(s) found.")))
 
-(defun bibtex-completion-open-pdf-zathura(candidates)
+(defun bibtex-completion-open-pdf-with (prog candidates)
   "Open the PDFs associated with the marked entries in Zathura.  All paths
 in `helm-bibtex-library-path' are searched.  If there are several
 matching PDFs for an entry, the first is opened."
@@ -705,19 +705,17 @@ matching PDFs for an entry, the first is opened."
       (-flatten
        (-map 'bibtex-completion-find-pdf
              (if (listp candidates) candidates (list candidates))))
-      (-each it (lambda(fpath) (call-process "zathura" nil 0 nil fpath)))
+      (-each it (lambda(fpath) (call-process prog nil 0 nil fpath)))
     (message "No PDF(s) found.")))
 
+(defun bibtex-completion-open-pdf-zathura(candidates)
+  (bibtex-completion-open-pdf-with "zathura" candidates))
+
 (defun bibtex-completion-open-pdf-okular (candidates)
-  "Open the PDFs associated with the marked entries in Okular.  All paths
-in `helm-bibtex-library-path' are searched.  If there are several
-matching PDFs for an entry, the first is opened."
-  (--if-let
-      (-flatten
-       (-map 'bibtex-completion-find-pdf
-             (if (listp candidates) candidates (list candidates))))
-      (-each it (lambda(fpath) (call-process "okular" nil 0 nil fpath)))
-    (message "No PDF(s) found.")))
+  (bibtex-completion-open-pdf-with "okular" candidates))
+
+(defun bibtex-completion-open-pdf-xreader (candidates)
+  (bibtex-completion-open-pdf-with "xreader" candidates))
 
 (defun bibtex-completion-copy-bibtex (candidates)
   "copy selected BibTeX entry."
