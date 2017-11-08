@@ -161,7 +161,7 @@ reread."
  '(("p" ivy-bibtex-open-pdf "Open in Emacs")
    ("z" ivy-bibtex-open-pdf-zathura "Open in Zathura")
    ("k" ivy-bibtex-open-pdf-okular "Open in Okular")
-   ("x" ivy-bibtex-open-pdf-okular "Open in Xreader")
+   ("x" ivy-bibtex-open-pdf-xreader "Open in Xreader")
    ("c" ivy-bibtex-copy-bibtex "Copy entry")
    ("t" ivy-bibtex-copy-title "Copy title")
    ("b" ivy-bibtex-send-to-dropbox "Send to Dropbox")
