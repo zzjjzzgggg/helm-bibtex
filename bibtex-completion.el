@@ -726,6 +726,12 @@ matching PDFs for an entry, the first is opened."
   (let* ((entry (bibtex-completion-get-entry (pop candidate))))
     (kill-new (bibtex-completion-get-value "title" entry))))
 
+(defun bibtex-completion-copy-reference (candidate)
+  "copy selected BibTeX entry title."
+  (let* ((entry (bibtex-completion-get-entry (pop candidate)))
+         (key (bibtex-completion-get-value "=key=" entry)))
+    (kill-new (bibtex-completion-apa-format-reference key))))
+
 (defun bibtex-completion-send-to-dropbox (candidates)
   "Copy the PDFs of the selected entries to Dropbox."
   (--if-let
@@ -898,11 +904,15 @@ publication specified by KEY."
     (ref (pcase (downcase (bibtex-completion-get-value "=type=" entry))
            ("article"
             (s-format
-             "${author} (${year}). ${title}. ${journal}, ${volume}(${number}), ${pages}.${doi}"
+             "${author}. ${title}. ${journal}, ${volume}(${number}), ${pages}, ${year}."
+             'bibtex-completion-apa-get-value entry))
+           ("conference"
+            (s-format
+             "${author}. ${title}. ${booktitle} ${year}."
              'bibtex-completion-apa-get-value entry))
            ("inproceedings"
             (s-format
-             "${author} (${year}). ${title}. In ${editor}, ${booktitle} (pp. ${pages}). ${address}: ${publisher}."
+             "${author}. ${title}. ${booktitle} ${year}."
              'bibtex-completion-apa-get-value entry))
            ("book"
             (s-format
