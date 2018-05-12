@@ -295,7 +295,7 @@ truncated to a width of N characters, whereas an expression like
 window. Three special fields are available: \"=type=\" holds the
 BibTeX entry type, \"=has-pdf=\" holds
 `bibtex-completion-pdf-symbol' if the entry has a PDF file, and
-\"=has-notes=\" holds `bibtex-completion-notes-symbol' if the
+\"=has-note=\" holds `bibtex-completion-notes-symbol' if the
 entry has a notes file. The \"author\" field is expanded to
 either the author names or, if the entry has no author field, the
 editor names."
@@ -309,10 +309,14 @@ editor names."
 (defvar bibtex-completion-cache nil
   "A cache storing the hash of the bibliography content and the
 corresponding list of entries, for each bibliography file,
-obtained when the bibliography was last parsed. When the
-current bibliography hash is identical to the cached hash, the
-cached list of candidates is reused, otherwise the bibliography
-file is reparsed.")
+obtained when the bibliography was last parsed. When the current
+bibliography hash is identical to the cached hash, the cached
+list of candidates is reused, otherwise the bibliography file is
+reparsed.")
+
+(defvar bibtex-completion-cached-notes-keys nil
+  "A cache storing notes keys obtained when the bibliography was
+  last parsed.")
 
 
 (defun bibtex-completion-normalize-bibliography (&optional type)
@@ -378,6 +382,18 @@ entry.  This is string is used for matching.  The second element
 is the entry (only the fields listed above) as an alist."
   (let ((files (nreverse (bibtex-completion-normalize-bibliography 'bibtex)))
         reparsed-files)
+
+    ;; Parse notes first
+    (when (and bibtex-completion-notes-path
+               (f-file? bibtex-completion-notes-path))
+      (with-temp-buffer
+        (org-mode)     ;;  need this to avoid error in emacs 25.3.1
+        (insert-file-contents bibtex-completion-notes-path)
+        (setq bibtex-completion-cached-notes-keys
+              (let ((tree (org-element-parse-buffer 'headline)))
+                (org-element-map tree 'headline
+                  (lambda (key) (org-element-property :CUSTOM_ID key)))))))
+
     ;; Open each bibliography file in a temporary buffer,
     ;; check hash of bibliography and reparse if necessary:
     (cl-loop
@@ -397,12 +413,14 @@ is the entry (only the fields listed above) as an alist."
            ;; Mark file as reparsed.
            ;; This will be useful to resolve cross-references:
            (push file reparsed-files)))))
+
     ;; If some files were reparsed, resolve cross-references:
     (when reparsed-files
       (message "Resolving cross-references ...")
       (bibtex-completion-resolve-crossrefs files reparsed-files))
+
     ;; Finally return the list of candidates:
-     (cl-loop
+    (cl-loop
       for file in files
       append (cddr (assoc file bibtex-completion-cache)))))
 
@@ -604,17 +622,10 @@ find a PDF file."
                     (if (not (string= "" comment))
                         (cons (cons "=comment=" (substring comment 0 1)) entry)
                       entry)))
-           ;; timestamp
-           ;; (entry (cons (cons "=timestamp=" (bibtex-completion-get-value "timestamp" entry "")) entry))
-           ; Check for notes:
+           ;; Check for notes:
            (entry (if (and bibtex-completion-notes-path
-                            (f-file? bibtex-completion-notes-path)
-                            (with-current-buffer (find-file-noselect bibtex-completion-notes-path)
-                              (save-excursion
-                                (save-restriction
-                                  (widen)
-                                  (goto-char (point-min))
-                                  (re-search-forward (format bibtex-completion-notes-key-pattern entry-key) nil t)))))
+                           (f-file? bibtex-completion-notes-path)
+                           (member (regexp-quote entry-key) bibtex-completion-cached-notes-keys))
                       (cons (cons "=has-note=" bibtex-completion-notes-symbol) entry)
                     entry))
            ; Remove unwanted fields:
