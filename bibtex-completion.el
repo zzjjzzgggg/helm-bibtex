@@ -70,7 +70,7 @@ systems default viewer for PDFs is used."
   :group 'bibtex-completion
   :type 'function)
 
-(defcustom bibtex-completion-dropbox-path "~/Dropbox"
+(defcustom bibtex-completion-dropbox-path nil
   "Symbol used to indicate the Dropbox directory."
   :group 'bibtex-completion
   :type '(choice directory (repeat directory)))
