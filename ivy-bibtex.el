@@ -86,7 +86,7 @@
 (require 'ivy)
 (require 'bibtex-completion)
 
-(defcustom ivy-bibtex-default-action 'ivy-bibtex-open-any
+(defcustom ivy-bibtex-default-action 'bibtex-completion-open-any
   "The default action for the `ivy-bibtex` command."
   :group 'bibtex-completion
   :type 'function)
@@ -97,27 +97,6 @@
          (entry (cdr (nth idx (ivy-state-collection ivy-last)))))
     (bibtex-completion-format-entry entry width)))
 
-(defmacro ivy-bibtex-ivify-action (action name)
-  "Wraps the function ACTION in another function named NAME which
-extracts the key from the candidate selected in ivy and passes it
-to ACTION."
-  `(defun ,name (candidate)
-     (let ((key (cdr (assoc "=key=" (cdr candidate)))))
-       (,action (list key)))))
-
-(ivy-bibtex-ivify-action bibtex-completion-open-any ivy-bibtex-open-any)
-(ivy-bibtex-ivify-action bibtex-completion-open-pdf ivy-bibtex-open-pdf)
-(ivy-bibtex-ivify-action bibtex-completion-open-pdf-zathura ivy-bibtex-open-pdf-zathura)
-(ivy-bibtex-ivify-action bibtex-completion-open-pdf-okular ivy-bibtex-open-pdf-okular)
-(ivy-bibtex-ivify-action bibtex-completion-open-pdf-xreader ivy-bibtex-open-pdf-xreader)
-(ivy-bibtex-ivify-action bibtex-completion-copy-bibtex ivy-bibtex-copy-bibtex)
-(ivy-bibtex-ivify-action bibtex-completion-copy-title ivy-bibtex-copy-title)
-(ivy-bibtex-ivify-action bibtex-completion-copy-reference ivy-bibtex-copy-reference)
-(ivy-bibtex-ivify-action bibtex-completion-send-to-dropbox ivy-bibtex-send-to-dropbox)
-(ivy-bibtex-ivify-action bibtex-completion-add-PDF-attachment ivy-bibtex-add-PDF-attachment)
-(ivy-bibtex-ivify-action bibtex-completion-edit-notes ivy-bibtex-edit-notes)
-(ivy-bibtex-ivify-action bibtex-completion-show-entry ivy-bibtex-edit-entry)
-(ivy-bibtex-ivify-action bibtex-completion-add-pdf-to-library ivy-bibtex-add-pdf-to-library)
 
 (defun ivy-bibtex-fallback (search-expression)
   "Select a fallback option for SEARCH-EXPRESSION. This is meant
@@ -159,17 +138,17 @@ reread."
 
 (ivy-set-actions
  'ivy-bibtex
- '(("p" ivy-bibtex-open-pdf "Open in Emacs")
-   ("z" ivy-bibtex-open-pdf-zathura "Open in Zathura")
-   ("k" ivy-bibtex-open-pdf-okular "Open in Okular")
-   ("x" ivy-bibtex-open-pdf-xreader "Open in Xreader")
-   ("c b" ivy-bibtex-copy-bibtex "Copy bibtex entry")
-   ("c t" ivy-bibtex-copy-title "Copy title")
-   ("c r" ivy-bibtex-copy-reference "Copy reference")
-   ("d" ivy-bibtex-send-to-dropbox "Send to Dropbox")
-   ("a" ivy-bibtex-add-PDF-attachment "Attach to email")
-   ("e" ivy-bibtex-edit-entry "Edit entry")
-   ("n" ivy-bibtex-edit-notes "Edit notes")
+ '(("p" bibtex-completion-open-pdf "Open in Emacs")
+   ("z" bibtex-completion-open-pdf-zathura "Open in Zathura")
+   ("k" bibtex-completion-open-pdf-okular "Open in Okular")
+   ("x" bibtex-completion-open-pdf-xreader "Open in Xreader")
+   ("c b" bibtex-completion-copy-bibtex "Copy bibtex entry")
+   ("c t" bibtex-completion-copy-title "Copy title")
+   ("c r" bibtex-completion-copy-reference "Copy reference")
+   ("d" bibtex-completion-send-to-dropbox "Send to Dropbox")
+   ("a" bibtex-completion-add-pdf-attachment "Attach to email")
+   ("e" bibtex-completion-edit-entry "Edit entry")
+   ("n" bibtex-completion-edit-notes "Edit notes")
    ("f" (lambda (_candidate) (ivy-bibtex-fallback ivy-text)) "Fallback options")))
 
 (provide 'ivy-bibtex)
