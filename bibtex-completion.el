@@ -1083,7 +1083,7 @@ defined.  Surrounding curly braces are stripped."
              concat
              (format "  %s = %s,\n" name value)))))
 
-(defun bibtex-completion-add-pdf-attachment (keys)
+(defun bibtex-completion-add-PDF-attachment (keys)
   "Attach the PDFs of the selected entries where available."
   (--if-let
       (-flatten
