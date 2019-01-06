@@ -1009,17 +1009,18 @@ guidelines.  Return DEFAULT if FIELD is not present in ENTRY."
              collect
              (let ((p (s-split " " a t)))
                (concat
-                (-last-item p) ", "
                 (s-join " " (-map (lambda (it) (concat (s-left 1 it) "."))
-                                  (-butlast p)))))
+                                  (-butlast p)))
+                " " (-last-item p)))
              into authors
            finally return
              (let ((l (length authors)))
                (cond
                  ((= l 1) (car authors))
-                 ((< l 8) (concat (s-join ", " (-butlast authors))
-                                  ", & " (-last-item authors)))
-                 (t (concat (s-join ", " authors) ", ..."))))))
+                 ((= l 2) (s-join " and " authors))
+                 ((< l 4) (concat (s-join ", " (-butlast authors))
+                                  ", and " (-last-item authors)))
+                 (t (concat (s-join ", " (subseq authors 0 3)) ", et al."))))))
 
 (defun bibtex-completion-apa-format-editors (value)
   (cl-loop for a in (s-split " and " value t)
