@@ -915,15 +915,15 @@ publication specified by KEY."
     (ref (pcase (downcase (bibtex-completion-get-value "=type=" entry))
            ("article"
             (s-format
-             "${author}. ${title}. ${journal}, ${volume}(${number}), ${pages}, ${year}."
+             "${author}. ${title}. ${journal}, ${year}, ${volume}(${number}):${pages}."
              'bibtex-completion-apa-get-value entry))
            ("conference"
             (s-format
-             "${author}. ${title}. ${booktitle} ${year}."
+             "${author}. ${title}. ${booktitle}, ${year}."
              'bibtex-completion-apa-get-value entry))
            ("inproceedings"
             (s-format
-             "${author}. ${title}. ${booktitle} ${year}."
+             "${author}. ${title}. ${booktitle}, ${year}."
              'bibtex-completion-apa-get-value entry))
            ("book"
             (s-format
