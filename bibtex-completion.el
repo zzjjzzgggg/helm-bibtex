@@ -915,7 +915,7 @@ publication specified by KEY."
     (ref (pcase (downcase (bibtex-completion-get-value "=type=" entry))
            ("article"
             (s-format
-             "${author}. ${title}. ${journal}, ${year}, ${volume}(${number}):${pages}."
+             "${author}. ${title}. ${journal}, ${volume}(${number}):${pages}, ${year}."
              'bibtex-completion-apa-get-value entry))
            ("conference"
             (s-format
