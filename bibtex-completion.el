@@ -380,7 +380,7 @@ each entry.  The first element of these conses is a string
 containing authors, editors, title, year, type, and key of the
 entry.  This is string is used for matching.  The second element
 is the entry (only the fields listed above) as an alist."
-  (let ((files (nreverse (bibtex-completion-normalize-bibliography 'bibtex)))
+  (let ((files (bibtex-completion-normalize-bibliography 'bibtex))
         reparsed-files)
 
     ;; Parse notes first
