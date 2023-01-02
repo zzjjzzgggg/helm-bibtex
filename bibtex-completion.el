@@ -720,6 +720,40 @@ matching PDFs for an entry, the first is opened."
       (-each it (lambda(fpath) (call-process prog nil 0 nil fpath)))
     (message "No PDF(s) found.")))
 
+
+(defun bibtex-completion-open-pdf-zathura(candidates)
+  (bibtex-completion-open-pdf-with "zathura" candidates))
+
+(defun bibtex-completion-open-pdf-okular (candidates)
+  (bibtex-completion-open-pdf-with "okular" candidates))
+
+(defun bibtex-completion-open-pdf-xreader (candidates)
+  (bibtex-completion-open-pdf-with "xreader" candidates))
+
+(defun bibtex-completion-copy-bibtex (candidates)
+  "copy selected BibTeX entry."
+  (kill-new (bibtex-completion-make-bibtex (pop candidates))))
+
+(defun bibtex-completion-copy-title (candidate)
+  "copy selected BibTeX entry title."
+  (let* ((entry (bibtex-completion-get-entry (pop candidate))))
+    (kill-new (bibtex-completion-get-value "title" entry))))
+
+(defun bibtex-completion-copy-reference (candidate)
+  "copy selected BibTeX entry title."
+  (let* ((entry (bibtex-completion-get-entry (pop candidate)))
+         (key (bibtex-completion-get-value "=key=" entry)))
+    (kill-new (bibtex-completion-apa-format-reference key))))
+
+(defun bibtex-completion-send-to-dropbox (candidates)
+  "Copy the PDFs of the selected entries to Dropbox."
+  (--if-let
+      (-flatten
+       (-map 'bibtex-completion-find-pdf
+             (if (listp candidates) candidates (list candidates))))
+      (-each it (lambda(fpath) (f-copy fpath bibtex-completion-dropbox-path)))
+    (message "No PDF(s) found.")))
+
 (defun bibtex-completion-open-url-or-doi (keys)
   "Open the associated URL or DOI in a browser."
   (dolist (key keys)
