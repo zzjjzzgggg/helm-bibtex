@@ -1487,7 +1487,7 @@ Surrounding curly braces are stripped."
                                           bibtex-completion-no-export-fields)
                                     '("=type=" "=key=" "=has-note=" "crossref" "=venue=" "=comment=")))
              concat
-             (format "  %s = %s,\n" name value)))))
+             (format "  %s = {%s},\n" name value)))))
 
 ;; (defun bibtex-completion-make-bibtex (key)
 ;;   "Create a self-contained BibTeX entry KEY.
