@@ -838,11 +838,10 @@ find a PDF file."
            (entry-key (cdr (assoc "=key=" entry)))
            ;; venue
            (entry (let* ((booktitle (bibtex-completion-get-value "booktitle" entry ""))
-                         (journaltitle (bibtex-completion-get-value "journaltitle" entry ""))
-                         (journal (bibtex-completion-get-value "journal" entry "")))
-                    ;; if `booktitle' or `journaltitle' or `journal' field is not empty
-                    (if (not (and (string= "" booktitle) (string= "" journaltitle) (string= "" journal)))
-                        (cons (cons "=venue=" (concat booktitle journaltitle journal)) entry)
+                         (journaltitle (bibtex-completion-get-value "journaltitle" entry "")))
+                    ;; if `booktitle' or `journaltitle' field is not empty
+                    (if (not (and (string= "" booktitle) (string= "" journaltitle)))
+                        (cons (cons "=venue=" (concat booktitle journaltitle)) entry)
                       entry)))
            ;; comment
            (entry (let* ((comment (bibtex-completion-get-value "comment" entry "")))
@@ -1225,31 +1224,31 @@ publication specified by KEY."
     (ref (pcase (downcase (bibtex-completion-get-value "=type=" entry))
            ("article"
             (s-format
-             "${author}. ${title}. ${journal}, ${volume}(${number}):${pages}, ${year}."
+             "${author-abbrev}. ${title}. ${journaltitle}, ${volume}(${number}):${pages}, ${year}."
              'bibtex-completion-apa-get-value entry))
            ("conference"
             (s-format
-             "${author}. ${title}. ${booktitle}, ${year}."
+             "${author-abbrev}. ${title}. ${booktitle}, ${year}."
              'bibtex-completion-apa-get-value entry))
            ("inproceedings"
             (s-format
-             "${author}. ${title}. ${booktitle}, ${year}."
+             "${author-abbrev}. ${title}. ${booktitle}, ${year}."
              'bibtex-completion-apa-get-value entry))
            ("book"
             (s-format
-             "${author} (${year}). ${title}. ${address}: ${publisher}."
+             "${author-abbrev} (${year}). ${title}. ${address}: ${publisher}."
              'bibtex-completion-apa-get-value entry))
            ("phdthesis"
             (s-format
-             "${author} (${year}). ${title} (Doctoral dissertation). ${school}, ${address}."
+             "${author-abbrev} (${year}). ${title} (Doctoral dissertation). ${school}, ${address}."
              'bibtex-completion-apa-get-value entry))
            ("inbook"
             (s-format
-             "${author} (${year}). ${title}. In ${editor} (Eds.), ${booktitle} (pp. ${pages}). ${address}: ${publisher}."
+             "${author-abbrev} (${year}). ${title}. In ${editor} (Eds.), ${booktitle} (pp. ${pages}). ${address}: ${publisher}."
              'bibtex-completion-apa-get-value entry))
            ("incollection"
             (s-format
-             "${author} (${year}). ${title}. In ${editor} (Eds.), ${booktitle} (pp. ${pages}). ${address}: ${publisher}."
+             "${author-abbrev} (${year}). ${title}. In ${editor} (Eds.), ${booktitle} (pp. ${pages}). ${address}: ${publisher}."
              'bibtex-completion-apa-get-value entry))
            ("proceedings"
             (s-format
