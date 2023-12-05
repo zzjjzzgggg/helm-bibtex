@@ -838,10 +838,11 @@ find a PDF file."
            (entry-key (cdr (assoc "=key=" entry)))
            ;; venue
            (entry (let* ((booktitle (bibtex-completion-get-value "booktitle" entry ""))
-                         (journaltitle (bibtex-completion-get-value "journaltitle" entry "")))
+                         (journaltitle (bibtex-completion-get-value "journaltitle" entry ""))
+                         (journal (bibtex-completion-get-value "journal" entry "")))
                     ;; if `booktitle' or `journaltitle' field is not empty
-                    (if (not (and (string= "" booktitle) (string= "" journaltitle)))
-                        (cons (cons "=venue=" (concat booktitle journaltitle)) entry)
+                    (if (not (and (string= "" booktitle) (string= "" journaltitle) (string= "" journal)))
+                        (cons (cons "=venue=" (concat booktitle journaltitle journal)) entry)
                       entry)))
            ;; comment
            (entry (let* ((comment (bibtex-completion-get-value "comment" entry "")))
