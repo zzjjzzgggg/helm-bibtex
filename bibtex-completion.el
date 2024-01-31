@@ -320,6 +320,16 @@ will look up the PDF in the directories listed in
   :group 'bibtex-completion
   :type 'string)
 
+(defcustom bibtex-completion-external-path "~/Public/OneDrive/"
+  "External path"
+  :group 'bibtex-completion
+  :type 'string)
+
+(defcustom bibtex-completion-external-reader "xreader"
+  "OneDrive path"
+  :group 'bibtex-completion
+  :type 'string)
+
 (defcustom bibtex-completion-display-formats
   '((t . "${author:36} ${title:*} ${year:4} ${=has-pdf=:1}${=has-note=:1} ${=type=:7}"))
   "Alist of format strings for displaying entries in the results list.
@@ -988,7 +998,7 @@ called in case no PDF is found."
 
 
 ;; added 2023-05-22 begin
-(defun bibtex-completion-open-pdf-with (prog candidates)
+(defun bibtex-completion-open-pdf-with-external-reader (candidates)
   "Open the PDFs associated with the marked entries in Zathura.  All paths
 in `helm-bibtex-library-path' are searched.  If there are several
 matching PDFs for an entry, the first is opened."
@@ -996,18 +1006,8 @@ matching PDFs for an entry, the first is opened."
       (-flatten
        (-map 'bibtex-completion-find-pdf
              (if (listp candidates) candidates (list candidates))))
-      (-each it (lambda(fpath) (call-process prog nil 0 nil fpath)))
+      (-each it (lambda(fpath) (call-process bibtex-completion-external-reader nil 0 nil fpath)))
     (message "No PDF(s) found.")))
-
-
-(defun bibtex-completion-open-pdf-zathura(candidates)
-  (bibtex-completion-open-pdf-with "zathura" candidates))
-
-(defun bibtex-completion-open-pdf-okular (candidates)
-  (bibtex-completion-open-pdf-with "okular" candidates))
-
-(defun bibtex-completion-open-pdf-xreader (candidates)
-  (bibtex-completion-open-pdf-with "xreader" candidates))
 
 (defun bibtex-completion-copy-bibtex (candidates)
   "copy selected BibTeX entry."
@@ -1024,13 +1024,13 @@ matching PDFs for an entry, the first is opened."
          (key (bibtex-completion-get-value "=key=" entry)))
     (kill-new (bibtex-completion-apa-format-reference key))))
 
-(defun bibtex-completion-send-to-dropbox (candidates)
-  "Copy the PDFs of the selected entries to Dropbox."
+(defun bibtex-completion-send-to-external (candidates)
+  "Copy the PDFs of the selected entries to Onedrive."
   (--if-let
       (-flatten
        (-map 'bibtex-completion-find-pdf
              (if (listp candidates) candidates (list candidates))))
-      (-each it (lambda(fpath) (f-copy fpath bibtex-completion-dropbox-path)))
+      (-each it (lambda(fpath) (f-copy fpath bibtex-completion-external-path)))
     (message "No PDF(s) found.")))
 
 

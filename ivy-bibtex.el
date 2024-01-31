@@ -124,7 +124,6 @@ in ivy and passes it to ACTION."
      (,action keys))))
 
 (ivy-bibtex-ivify-action bibtex-completion-open-any ivy-bibtex-open-any)
-(ivy-bibtex-ivify-action bibtex-completion-open-pdf ivy-bibtex-open-pdf)
 (ivy-bibtex-ivify-action bibtex-completion-open-url-or-doi ivy-bibtex-open-url-or-doi)
 (ivy-bibtex-ivify-action bibtex-completion-insert-citation ivy-bibtex-insert-citation)
 (ivy-bibtex-ivify-action bibtex-completion-insert-reference ivy-bibtex-insert-reference)
@@ -133,15 +132,12 @@ in ivy and passes it to ACTION."
 (ivy-bibtex-ivify-action bibtex-completion-add-PDF-attachment ivy-bibtex-add-PDF-attachment)
 (ivy-bibtex-ivify-action bibtex-completion-edit-notes ivy-bibtex-edit-notes)
 (ivy-bibtex-ivify-action bibtex-completion-show-entry ivy-bibtex-show-entry)
-(ivy-bibtex-ivify-action bibtex-completion-add-pdf-to-library ivy-bibtex-add-pdf-to-library)
 
-(ivy-bibtex-ivify-action bibtex-completion-open-pdf-zathura ivy-bibtex-open-pdf-zathura)
-(ivy-bibtex-ivify-action bibtex-completion-open-pdf-okular ivy-bibtex-open-pdf-okular)
-(ivy-bibtex-ivify-action bibtex-completion-open-pdf-xreader ivy-bibtex-open-pdf-xreader)
+(ivy-bibtex-ivify-action bibtex-completion-open-pdf-with-external-reader ivy-bibtex-open-pdf-with-external-reader)
 (ivy-bibtex-ivify-action bibtex-completion-copy-bibtex ivy-bibtex-copy-bibtex)
 (ivy-bibtex-ivify-action bibtex-completion-copy-title ivy-bibtex-copy-title)
 (ivy-bibtex-ivify-action bibtex-completion-copy-reference ivy-bibtex-copy-reference)
-(ivy-bibtex-ivify-action bibtex-completion-send-to-dropbox ivy-bibtex-send-to-dropbox)
+(ivy-bibtex-ivify-action bibtex-completion-send-to-external ivy-bibtex-send-to-external)
 
 (defun ivy-bibtex-fallback (search-expression)
   "Select a fallback option for SEARCH-EXPRESSION.
@@ -216,23 +212,15 @@ reread."
 
 (ivy-set-actions
  'ivy-bibtex
- '(("p" ivy-bibtex-open-pdf "Open PDF file (if present)" ivy-bibtex-open-pdf)
-   ("z" ivy-bibtex-open-pdf-zathura "Open in Zathura" ivy-bibtex-open-pdf-zathura)
-   ("k" ivy-bibtex-open-pdf-okular "Open in Okular" ivy-bibtex-open-pdf-okular)
-   ("x" ivy-bibtex-open-pdf-xreader "Open in Xreader" ivy-bibtex-open-pdf-xreader)
+ '(("x" ivy-bibtex-open-pdf-with-external-reader "Open in external reader" ivy-bibtex-open-pdf-with-external-reader)
    ("cb" ivy-bibtex-copy-bibtex "Copy bibtex entry" ivy-bibtex-copy-bibtex)
    ("ct" ivy-bibtex-copy-title "Copy title" ivy-bibtex-copy-title)
    ("cr" ivy-bibtex-copy-reference "Copy reference" ivy-bibtex-copy-reference)
-   ("d" ivy-bibtex-send-to-dropbox "Send to Dropbox" ivy-bibtex-send-to-dropbox)
-   ;; ("u" ivy-bibtex-open-url-or-doi "Open URL or DOI in browser" ivy-bibtex-open-url-or-doi)
-   ;; ("c" ivy-bibtex-insert-citation "Insert citation" ivy-bibtex-insert-citation)
-   ;; ("r" ivy-bibtex-insert-reference "Insert reference" ivy-bibtex-insert-reference)
-   ;; ("k" ivy-bibtex-insert-key "Insert BibTeX key" ivy-bibtex-insert-key)
+   ("d" ivy-bibtex-send-to-external "Send to Onedrive" ivy-bibtex-send-to-external)
    ("b" ivy-bibtex-insert-bibtex "Insert BibTeX entry" ivy-bibtex-insert-bibtex)
    ("a" ivy-bibtex-add-PDF-attachment "Attach PDF to email" ivy-bibtex-add-PDF-attachment)
    ("e" ivy-bibtex-edit-notes "Edit notes" ivy-bibtex-edit-notes)
    ("s" ivy-bibtex-show-entry "Show entry" ivy-bibtex-show-entry)
-   ("l" ivy-bibtex-add-pdf-to-library "Add PDF to library" ivy-bibtex-add-pdf-to-library)
    ("f" (lambda (_candidate) (ivy-bibtex-fallback ivy-text)) "Fallback options")))
 
 
