@@ -325,11 +325,6 @@ will look up the PDF in the directories listed in
   :group 'bibtex-completion
   :type 'string)
 
-(defcustom bibtex-completion-external-reader "xreader"
-  "OneDrive path"
-  :group 'bibtex-completion
-  :type 'string)
-
 (defcustom bibtex-completion-display-formats
   '((t . "${author:36} ${title:*} ${year:4} ${=has-pdf=:1}${=has-note=:1} ${=type=:7}"))
   "Alist of format strings for displaying entries in the results list.
@@ -998,7 +993,7 @@ called in case no PDF is found."
 
 
 ;; added 2023-05-22 begin
-(defun bibtex-completion-open-pdf-with-external-reader (candidates)
+(defun bibtex-completion-open-pdf-with (prog candidates)
   "Open the PDFs associated with the marked entries in Zathura.  All paths
 in `helm-bibtex-library-path' are searched.  If there are several
 matching PDFs for an entry, the first is opened."
@@ -1006,8 +1001,14 @@ matching PDFs for an entry, the first is opened."
       (-flatten
        (-map 'bibtex-completion-find-pdf
              (if (listp candidates) candidates (list candidates))))
-      (-each it (lambda(fpath) (call-process bibtex-completion-external-reader nil 0 nil fpath)))
+      (-each it (lambda(fpath) (call-process prog nil 0 nil fpath)))
     (message "No PDF(s) found.")))
+
+(defun bibtex-completion-open-pdf-with-xreader (candidates)
+  (bibtex-completion-open-pdf-with "xreader" candidates))
+
+(defun bibtex-completion-open-pdf-with-zathura (candidates)
+  (bibtex-completion-open-pdf-with "zathura" candidates))
 
 (defun bibtex-completion-copy-bibtex (candidates)
   "copy selected BibTeX entry."
