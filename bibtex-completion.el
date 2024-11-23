@@ -5,7 +5,7 @@
 ;; Maintainer: Titus von der Malsburg <malsburg@posteo.de>
 ;; URL: https://github.com/tmalsburg/helm-bibtex
 ;; Version: 1.0.0
-;; Package-Requires: ((parsebib "1.0") (s "1.9.0") (dash "2.6.0") (f "0.16.2") (cl-lib "0.5") (biblio "0.2") (emacs "26.1"))
+;; Package-Requires: ((parsebib "6.0") (s "1.9.0") (dash "2.6.0") (f "0.16.2") (cl-lib "0.5") (biblio "0.2") (emacs "26.1"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -221,7 +221,7 @@ be called when the entry is selected."
   :group 'bibtex-completion
   :type '(alist :key-type string
                 :value-type (choice (string :tag "URL")
-                            (function :tag "Function"))))
+                                    (function :tag "Function"))))
 
 (defcustom bibtex-completion-browser-function nil
   "The browser that is used to access online resources.
@@ -275,13 +275,13 @@ browser in `helm-browse-url-default-browser-alist'"
   :type '(repeat string))
 
 (defcustom bibtex-completion-cite-commands '("cite" "Cite" "parencite"
-"Parencite" "footcite" "footcitetext" "textcite" "Textcite"
-"smartcite" "Smartcite" "cite*" "parencite*" "supercite" "autocite"
-"Autocite" "autocite*" "Autocite*" "citeauthor" "Citeauthor"
-"citeauthor*" "Citeauthor*" "citetitle" "citetitle*" "citeyear"
-"citeyear*" "citedate" "citedate*" "citeurl" "nocite" "fullcite"
-"footfullcite" "notecite" "Notecite" "pnotecite" "Pnotecite"
-"fnotecite")
+                                             "Parencite" "footcite" "footcitetext" "textcite" "Textcite"
+                                             "smartcite" "Smartcite" "cite*" "parencite*" "supercite" "autocite"
+                                             "Autocite" "autocite*" "Autocite*" "citeauthor" "Citeauthor"
+                                             "citeauthor*" "Citeauthor*" "citetitle" "citetitle*" "citeyear"
+                                             "citeyear*" "citedate" "citedate*" "citeurl" "nocite" "fullcite"
+                                             "footfullcite" "notecite" "Notecite" "pnotecite" "Pnotecite"
+                                             "fnotecite")
   "The list of LaTeX cite commands.
 When creating LaTeX citations, these can be accessed as future
 entries in the minibuffer history, i.e. by pressing the arrow
@@ -427,7 +427,7 @@ Also sets `bibtex-completion-display-formats-internal'."
                 (setq bibtex-completion-file-watch-descriptors
                       (cons watch-descriptor bibtex-completion-file-watch-descriptors)))
             (user-error "Bibliography file %s could not be found" file)))
-            (bibtex-completion-normalize-bibliography))
+        (bibtex-completion-normalize-bibliography))
 
   ;; Pre-calculate minimal widths needed by the format strings for
   ;; various entry types:
@@ -482,9 +482,10 @@ for string replacement."
                    for entry-type = (parsebib-find-next-item)
                    while entry-type
                    if (string= (downcase entry-type) "string")
-                   collect (let ((entry (parsebib-read-string (point) ht)))
+                   collect (let ((entry (parsebib-read-string ht)))
                              (puthash (car entry) (cdr entry) ht)
-                             entry))))
+                             entry)
+                   else do (forward-line 1))))
     (-filter (lambda (x) x) strings)))
 
 (defun bibtex-completion-update-strings-ht (ht strings)
@@ -541,7 +542,7 @@ fields listed above) as an alist."
                (f-file? bibtex-completion-notes-path))
       (require 'org-element)
       (with-temp-buffer
-	(org-mode)     ;;  need this to avoid error in emacs 25.3.1
+        (org-mode)     ;;  need this to avoid error in emacs 25.3.1
         (insert-file-contents bibtex-completion-notes-path)
         (setq bibtex-completion-cached-notes-keys
               (let ((tree (org-element-parse-buffer 'headline)))
@@ -607,7 +608,7 @@ fields listed above) as an alist."
                       ;; Insert an empty field so we can discard the crossref info if needed:
                       (append entry
                               (cl-acons "" ""
-                                     (gethash (downcase crossref) entry-hash))))
+                                        (gethash (downcase crossref) entry-hash))))
                    entry))))
    else
    ;; The file was not reparsed.
@@ -625,7 +626,7 @@ fields listed above) as an alist."
                       ;; Discard crossref info and resolve crossref again:
                       (append (--take-while (> (length (car it)) 0) entry-alist)
                               (cl-acons "" ""
-                                     (gethash (downcase crossref) entry-hash)))))
+                                        (gethash (downcase crossref) entry-hash)))))
                   entry)))))
 
 (defun bibtex-completion-make-entry-hash (files reparsed-files)
@@ -635,15 +636,15 @@ Only entries whose type belongs to
 the hash table."
   (cl-loop
    with entries =
-     (cl-loop
-      for file in files
-      for entries = (cddr (assoc file bibtex-completion-cache))
-      if (member file reparsed-files)
-      ;; Entries are alists of \(FIELD . VALUE\) pairs.
-      append entries
-      ;; Entries are \(STRING . ALIST\) conses.
-      else
-      append (mapcar 'cdr entries))
+   (cl-loop
+    for file in files
+    for entries = (cddr (assoc file bibtex-completion-cache))
+    if (member file reparsed-files)
+    ;; Entries are alists of \(FIELD . VALUE\) pairs.
+    append entries
+    ;; Entries are \(STRING . ALIST\) conses.
+    else
+    append (mapcar 'cdr entries))
    with ht = (make-hash-table :test #'equal :size (length entries))
    for entry in entries
    for key = (bibtex-completion-get-value "=key=" entry)
@@ -672,8 +673,8 @@ If HT-STRINGS is provided it is assumed to be a hash table."
                                bibtex-completion-additional-search-fields))
    for entry-type = (parsebib-find-next-item)
    while entry-type
-   unless (member-ignore-case entry-type '("preamble" "string" "comment"))
-   collect (let* ((entry (parsebib-read-entry entry-type (point) ht-strings))
+   if (not (member-ignore-case entry-type '("preamble" "string" "comment")))
+   collect (let* ((entry (parsebib-read-entry nil ht-strings))
                   (fields (append
                            (list (if (assoc-string "author" entry 'case-fold)
                                      "author"
@@ -684,7 +685,8 @@ If HT-STRINGS is provided it is assumed to be a hash table."
                            fields)))
              (-map (lambda (it)
                      (cons (downcase (car it)) (cdr it)))
-                   (bibtex-completion-prepare-entry entry fields)))))
+                   (bibtex-completion-prepare-entry entry fields)))
+   else do (forward-line 1)))
 
 (defun bibtex-completion-get-entry (entry-key)
   "Given a BibTeX key this function scans all bibliographies listed in `bibtex-completion-bibliography' and returns an alist of the record with that key.
@@ -703,9 +705,10 @@ Fields from crossreferenced entries are appended to the requested entry."
                                      "\\)[[:space:]]*[\(\{][[:space:]]*"
                                      (regexp-quote entry-key) "[[:space:]]*,")
                              nil t)
-          (let ((entry-type (match-string 1)))
+          (progn
+            (goto-char (match-beginning 0))
             (reverse (bibtex-completion-prepare-entry
-                      (parsebib-read-entry entry-type (point) bibtex-completion-string-hash-table) nil do-not-find-pdf)))
+                      (parsebib-read-entry nil bibtex-completion-string-hash-table) nil do-not-find-pdf)))
         (progn
           (display-warning :warning (concat "Bibtex-completion couldn't find entry with key \"" entry-key "\"."))
           nil)))))
@@ -861,7 +864,7 @@ find a PDF file."
                            (member (regexp-quote entry-key) bibtex-completion-cached-notes-keys))
                       (cons (cons "=has-note=" bibtex-completion-notes-symbol) entry)
                     entry))
-           ; Remove unwanted fields:
+                                        ; Remove unwanted fields:
            (entry (if fields
                       (--filter (member-ignore-case (car it) fields) entry)
                     entry)))
@@ -953,7 +956,7 @@ governed by the variable `bibtex-completion-display-formats'."
 (defun bibtex-completion-clean-string (s)
   "Remove quoting and superfluous white space from BibTeX field value in S."
   (if s (replace-regexp-in-string "[\n\t ]+" " "
-         (replace-regexp-in-string "[\"{}]+" "" s))
+                                  (replace-regexp-in-string "[\"{}]+" "" s))
     nil))
 
 (defun bibtex-completion-shorten-authors (authors)
@@ -1087,7 +1090,7 @@ only adds KEYS to it."
                 (_ ", "))
               (s-join ", " keys)
               (if (member (following-char) '(?\} ?,))
-		     ""
+                  ""
                 ", ")))
      ((and (equal (preceding-char) ?\})
            (require 'reftex-parse nil t)
@@ -1160,8 +1163,8 @@ which no PDF is available are omitted."
 (defun bibtex-completion-format-citation-org-cite (keys)
   "Format org-links using Org mode's own cite syntax."
   (format "[cite:%s]"
-    (s-join ";"
-            (--map (format "@%s" it) keys))))
+          (s-join ";"
+                  (--map (format "@%s" it) keys))))
 
 (defun bibtex-completion-format-citation-org-apa-link-to-PDF (keys)
   "Format org-links to PDF for entries in KEYS.
@@ -1177,9 +1180,9 @@ several are available."
                                (car (split-string (bibtex-completion-get-value "date" entry "") "-")))
                 for pdf = (car (bibtex-completion-find-pdf key))
                 if pdf
-                  collect (with-no-warnings (org-make-link-string pdf (format "%s (%s)" author year)))
+                collect (with-no-warnings (org-make-link-string pdf (format "%s (%s)" author year)))
                 else
-                  collect (format "%s (%s)" author year))))
+                collect (format "%s (%s)" author year))))
 
 ;; When you want to create a todo list about reading, I think using
 ;; PDF's title is more intuitive.
@@ -1194,7 +1197,7 @@ several are available."
                 for pdf = (or (car (bibtex-completion-find-pdf key))
                               (bibtex-completion-get-value "url" entry))
                 if pdf
-                  collect (with-no-warnings (org-make-link-string pdf title))
+                collect (with-no-warnings (org-make-link-string pdf title))
                 else
                 collect (format "%s" title))))
 
@@ -1222,49 +1225,49 @@ The format depends on
   "Returns a plain text reference in APA format for the
 publication specified by KEY."
   (let*
-   ((entry (bibtex-completion-get-entry key))
-    (ref (pcase (downcase (bibtex-completion-get-value "=type=" entry))
-           ("article"
-            (s-format
-             "${author-abbrev}. ${title}. ${journaltitle}, ${volume}(${number}):${pages}, ${year}."
-             'bibtex-completion-apa-get-value entry))
-           ("conference"
-            (s-format
-             "${author-abbrev}. ${title}. ${booktitle}, ${year}."
-             'bibtex-completion-apa-get-value entry))
-           ("inproceedings"
-            (s-format
-             "${author-abbrev}. ${title}. ${booktitle}, ${year}."
-             'bibtex-completion-apa-get-value entry))
-           ("book"
-            (s-format
-             "${author-abbrev} (${year}). ${title}. ${address}: ${publisher}."
-             'bibtex-completion-apa-get-value entry))
-           ("phdthesis"
-            (s-format
-             "${author-abbrev} (${year}). ${title} (Doctoral dissertation). ${school}, ${address}."
-             'bibtex-completion-apa-get-value entry))
-           ("inbook"
-            (s-format
-             "${author-abbrev} (${year}). ${title}. In ${editor} (Eds.), ${booktitle} (pp. ${pages}). ${address}: ${publisher}."
-             'bibtex-completion-apa-get-value entry))
-           ("incollection"
-            (s-format
-             "${author-abbrev} (${year}). ${title}. In ${editor} (Eds.), ${booktitle} (pp. ${pages}). ${address}: ${publisher}."
-             'bibtex-completion-apa-get-value entry))
-           ("proceedings"
-            (s-format
-             "${editor} (Eds.). (${year}). ${booktitle}. ${address}: ${publisher}."
-             'bibtex-completion-apa-get-value entry))
-           ("unpublished"
-            (s-format
-             "${author} (${year}). ${title}. Unpublished manuscript."
-             'bibtex-completion-apa-get-value entry))
-           (_
-            (s-format
-             "${author} (${year}). ${title}."
-             'bibtex-completion-apa-get-value entry)))))
-   (replace-regexp-in-string "\\([.?!]\\)\\." "\\1" ref))) ; Avoid sequences of punctuation marks.
+      ((entry (bibtex-completion-get-entry key))
+       (ref (pcase (downcase (bibtex-completion-get-value "=type=" entry))
+              ("article"
+               (s-format
+                "${author-abbrev}. ${title}. ${journaltitle}, ${volume}(${number}):${pages}, ${year}."
+                'bibtex-completion-apa-get-value entry))
+              ("conference"
+               (s-format
+                "${author-abbrev}. ${title}. ${booktitle}, ${year}."
+                'bibtex-completion-apa-get-value entry))
+              ("inproceedings"
+               (s-format
+                "${author-abbrev}. ${title}. ${booktitle}, ${year}."
+                'bibtex-completion-apa-get-value entry))
+              ("book"
+               (s-format
+                "${author-abbrev} (${year}). ${title}. ${address}: ${publisher}."
+                'bibtex-completion-apa-get-value entry))
+              ("phdthesis"
+               (s-format
+                "${author-abbrev} (${year}). ${title} (Doctoral dissertation). ${school}, ${address}."
+                'bibtex-completion-apa-get-value entry))
+              ("inbook"
+               (s-format
+                "${author-abbrev} (${year}). ${title}. In ${editor} (Eds.), ${booktitle} (pp. ${pages}). ${address}: ${publisher}."
+                'bibtex-completion-apa-get-value entry))
+              ("incollection"
+               (s-format
+                "${author-abbrev} (${year}). ${title}. In ${editor} (Eds.), ${booktitle} (pp. ${pages}). ${address}: ${publisher}."
+                'bibtex-completion-apa-get-value entry))
+              ("proceedings"
+               (s-format
+                "${editor} (Eds.). (${year}). ${booktitle}. ${address}: ${publisher}."
+                'bibtex-completion-apa-get-value entry))
+              ("unpublished"
+               (s-format
+                "${author} (${year}). ${title}. Unpublished manuscript."
+                'bibtex-completion-apa-get-value entry))
+              (_
+               (s-format
+                "${author} (${year}). ${title}."
+                'bibtex-completion-apa-get-value entry)))))
+    (replace-regexp-in-string "\\([.?!]\\)\\." "\\1" ref))) ; Avoid sequences of punctuation marks.
 
 
 ;; (defun bibtex-completion-apa-format-reference (key)
@@ -1704,14 +1707,14 @@ If string, SEARCH-EXPRESSION will be inserted at %s in string.
 If function, it will be called with SEARCH-EXPRESSION as
 argument."
   (let ((browse-url-browser-function
-          (or bibtex-completion-browser-function
-              browse-url-browser-function)))
+         (or bibtex-completion-browser-function
+             browse-url-browser-function)))
     (cond
-      ((stringp url-or-function)
-        (browse-url (format url-or-function (url-hexify-string search-expression))))
-      ((functionp url-or-function)
-        (funcall url-or-function search-expression))
-      (t (error "Don't know how to interpret this: %s" url-or-function)))))
+     ((stringp url-or-function)
+      (browse-url (format url-or-function (url-hexify-string search-expression))))
+     ((functionp url-or-function)
+      (funcall url-or-function search-expression))
+     (t (error "Don't know how to interpret this: %s" url-or-function)))))
 
 (defun bibtex-completion-fallback-candidates ()
   "Compile list of fallback options.
@@ -1720,10 +1723,10 @@ These consist of the online resources defined in
 bibliography file that will open that file for editing."
   (let ((bib-files (bibtex-completion-normalize-bibliography 'main)))
     (-concat
-      (--map (cons (s-concat "Create new entry in " (f-filename it))
-                   `(lambda (_search-expression) (find-file ,it) (goto-char (point-max)) (newline)))
-             bib-files)
-      bibtex-completion-fallback-options)))
+     (--map (cons (s-concat "Create new entry in " (f-filename it))
+                  `(lambda (_search-expression) (find-file ,it) (goto-char (point-max)) (newline)))
+            bib-files)
+     bibtex-completion-fallback-options)))
 
 (defun bibtex-completion-find-local-bibliography ()
   "Return a list of BibTeX files associated with the current file.
