@@ -103,10 +103,10 @@
 (defun ivy-bibtex-display-transformer (candidate)
   "Prepare bib entry CANDIDATE for display."
   (let* ((width (- (frame-width) 2))
-	 (idx (get-text-property 1 'idx candidate))
-	 (entry (cdr (nth idx (ivy-state-collection ivy-last)))))
+         (idx (get-text-property 1 'idx candidate))
+         (entry (cdr (nth idx (ivy-state-collection ivy-last)))))
     (s-concat (if (s-starts-with-p ivy-mark-prefix candidate) ivy-mark-prefix "")
-	      (bibtex-completion-format-entry entry width))))
+              (bibtex-completion-format-entry entry width))))
 
 (defmacro ivy-bibtex-ivify-action (action name)
   "Wraps the function ACTION in two other functions named NAME and NAME-multi.
@@ -116,19 +116,14 @@ passes it to ACTION.
 
 The second extracts the list of keys in mark candidates selected
 in ivy and passes it to ACTION."
- `(defun ,name (candidates)
-   ,(format "Ivy wrapper for `%s' applied to one or more CANDIDATES." action)
-   (let ((keys (if (consp (car candidates))
-		  (--map (cdr (assoc "=key=" (cdr it))) candidates)
-		(list (cdr (assoc "=key=" (cdr candidates)))))))
-     (,action keys))))
+  `(defun ,name (candidates)
+     ,(format "Ivy wrapper for `%s' applied to one or more CANDIDATES." action)
+     (let ((keys (if (consp (car candidates))
+                     (--map (cdr (assoc "=key=" (cdr it))) candidates)
+                   (list (cdr (assoc "=key=" (cdr candidates)))))))
+       (,action keys))))
 
 (ivy-bibtex-ivify-action bibtex-completion-open-any ivy-bibtex-open-any)
-;; (ivy-bibtex-ivify-action bibtex-completion-open-url-or-doi ivy-bibtex-open-url-or-doi)
-;; (ivy-bibtex-ivify-action bibtex-completion-insert-citation ivy-bibtex-insert-citation)
-;; (ivy-bibtex-ivify-action bibtex-completion-insert-reference ivy-bibtex-insert-reference)
-;; (ivy-bibtex-ivify-action bibtex-completion-insert-key ivy-bibtex-insert-key)
-;; (ivy-bibtex-ivify-action bibtex-completion-insert-bibtex ivy-bibtex-insert-bibtex)
 (ivy-bibtex-ivify-action bibtex-completion-add-PDF-attachment ivy-bibtex-add-PDF-attachment)
 (ivy-bibtex-ivify-action bibtex-completion-edit-notes ivy-bibtex-edit-notes)
 (ivy-bibtex-ivify-action bibtex-completion-show-entry ivy-bibtex-show-entry)
@@ -219,7 +214,6 @@ reread."
    ("ct" ivy-bibtex-copy-title "Copy title" ivy-bibtex-copy-title)
    ("cr" ivy-bibtex-copy-reference "Copy reference" ivy-bibtex-copy-reference)
    ("d" ivy-bibtex-send-to-external "Send to external" ivy-bibtex-send-to-external)
-   ;; ("b" ivy-bibtex-insert-bibtex "Insert BibTeX entry" ivy-bibtex-insert-bibtex)
    ("a" ivy-bibtex-add-PDF-attachment "Attach PDF to email" ivy-bibtex-add-PDF-attachment)
    ("e" ivy-bibtex-edit-notes "Edit notes" ivy-bibtex-edit-notes)
    ("s" ivy-bibtex-show-entry "Show entry" ivy-bibtex-show-entry)

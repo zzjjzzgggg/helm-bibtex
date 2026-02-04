@@ -1229,15 +1229,15 @@ publication specified by KEY."
        (ref (pcase (downcase (bibtex-completion-get-value "=type=" entry))
               ("article"
                (s-format
-                "${author-abbrev}. ${title}. ${journaltitle}, ${volume}(${number}):${pages}, ${year}."
+                "${author-abbrev}. ${title}. ${booktitle-or-journaltitle-abbrev}, ${year}."
                 'bibtex-completion-apa-get-value entry))
               ("conference"
                (s-format
-                "${author-abbrev}. ${title}. ${booktitle}, ${year}."
+                "${author-abbrev}. ${title}. ${booktitle-or-journaltitle-abbrev}, ${year}."
                 'bibtex-completion-apa-get-value entry))
               ("inproceedings"
                (s-format
-                "${author-abbrev}. ${title}. ${booktitle}, ${year}."
+                "${author-abbrev}. ${title}. ${booktitle-or-journaltitle-abbrev}, ${year}."
                 'bibtex-completion-apa-get-value entry))
               ("book"
                (s-format
@@ -1270,51 +1270,6 @@ publication specified by KEY."
     (replace-regexp-in-string "\\([.?!]\\)\\." "\\1" ref))) ; Avoid sequences of punctuation marks.
 
 
-;; (defun bibtex-completion-apa-format-reference (key)
-;;   "Return a plain text reference in APA format for the publication specified by KEY."
-;;   (let*
-;;    ((entry (bibtex-completion-get-entry key))
-;;     (ref (pcase (downcase (bibtex-completion-get-value "=type=" entry))
-;;            ("article"
-;;             (s-format
-;;              "${author} (${year}). ${title}. ${journal}, ${volume}(${number}), ${pages}.${doi}"
-;;              'bibtex-completion-apa-get-value entry))
-;;            ("inproceedings"
-;;             (s-format
-;;              "${author} (${year}). ${title}. In ${editor}, ${booktitle} (pp. ${pages}). ${address}: ${publisher}."
-;;              'bibtex-completion-apa-get-value entry))
-;;            ("book"
-;;             (s-format
-;;              "${author} (${year}). ${title}. ${address}: ${publisher}."
-;;              'bibtex-completion-apa-get-value entry))
-;;            ("phdthesis"
-;;             (s-format
-;;              "${author} (${year}). ${title} (Doctoral dissertation). ${school}, ${address}."
-;;              'bibtex-completion-apa-get-value entry))
-;;            ("inbook"
-;;             (s-format
-;;              "${author} (${year}). ${chapter}. In ${editor} (Eds.), ${title} (pp. ${pages}). ${address}: ${publisher}."
-;;              'bibtex-completion-apa-get-value entry))
-;;            ("incollection"
-;;             (s-format
-;;              "${author} (${year}). ${title}. In ${editor} (Eds.), ${booktitle} (pp. ${pages}). ${address}: ${publisher}."
-;;              'bibtex-completion-apa-get-value entry))
-;;            ("proceedings"
-;;             (s-format
-;;              "${editor} (Eds.). (${year}). ${booktitle}. ${address}: ${publisher}."
-;;              'bibtex-completion-apa-get-value entry))
-;;            ("unpublished"
-;;             (s-format
-;;              "${author} (${year}). ${title}. Unpublished manuscript."
-;;              'bibtex-completion-apa-get-value entry))
-;;            (_
-;;             (s-format
-;;              "${author} (${year}). ${title}."
-;;              'bibtex-completion-apa-get-value entry)))))
-;;    (replace-regexp-in-string "\\([.?!]\\)\\." "\\1" ref))) ; Avoid sequences of punctuation marks.
-
-;;;; revised 2023-05-22 end
-
 (defun bibtex-completion-apa-get-value (field entry &optional default)
   "Return FIELD or ENTRY formatted following the APA guidelines.
 Return DEFAULT if FIELD is not present in ENTRY.  Return empty
@@ -1323,8 +1278,6 @@ string if FIELD is not present in ENTRY and DEFAULT is nil."
    (pcase field
      ;; Virtual fields:
      ("author-or-editor"
-      ;; Avoid if-let and when-let because they're not working reliably
-      ;; in all versions of Emacs that we currently support:
       (if-let ((value (bibtex-completion-get-value "author" entry)))
           (bibtex-completion-apa-format-authors value)
         (when-let ((value (bibtex-completion-get-value "editor" entry)))
@@ -1340,6 +1293,11 @@ string if FIELD is not present in ENTRY and DEFAULT is nil."
      ("editor-abbrev"
       (when-let ((value (bibtex-completion-get-value "editor" entry)))
         (bibtex-completion-apa-format-editors-abbrev value)))
+     ("booktitle-or-journaltitle-abbrev"
+      (if-let ((value (bibtex-completion-get-value "booktitle" entry)))
+          (bibtex-completion-shorten-venue value)
+        (when-let ((value (bibtex-completion-get-value "journaltitle" entry)))
+          (bibtex-completion-shorten-venue value))))
      (_
       ;; Real fields:
       (let ((value (bibtex-completion-get-value field entry)))
@@ -1375,6 +1333,13 @@ string if FIELD is not present in ENTRY and DEFAULT is nil."
                           (car (split-string (bibtex-completion-get-value "date" entry "") "-"))))
               (_ value))))))
    default ""))
+
+(defun bibtex-completion-shorten-venue (input-str)
+  "Check whether INPUT-STR contains ': ', if yes, return first substring,
+otherwise, return original string."
+  (if (string-match-p ": " input-str)
+      (substring input-str 0 (string-match ": " input-str))
+    input-str))
 
 (defun bibtex-completion-apa-format-authors (value &optional abbrev)
   "Format author list in VALUE in APA style.
